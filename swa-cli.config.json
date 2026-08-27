@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/static-web-apps-cli/main/schema/swa-cli.config.schema.json",
+  "configurations": {
+    "production": {
+      "appLocation": ".",
+      "outputLocation": "dist",
+      "apiLocation": "api",
+      "swaConfigLocation": "public",
+      "appName": "sf-gridsong",
+      "resourceGroup": "sociobot",
+      "apiLanguage": "node",
+      "apiVersion": "22"
+    }
+  }
+}

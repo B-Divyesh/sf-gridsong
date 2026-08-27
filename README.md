@@ -18,7 +18,7 @@ Live: <https://gridsong.sociobot.in>
 
 The teacher creates a board on the projector/device and copies its **student class pass**. The pass is a self-contained URL that works on any student device. It carries an unguessable, submit-only capability: it cannot read the board. A student opens it, composes, enters a short classroom nickname, and presses **Send to class gallery**. The projector checks for new submissions every five seconds while the board is open; no teacher ticket-pasting step is involved.
 
-The teacher key is a separate unguessable capability held only in the teacher browser’s local storage. The gallery service stores only nickname, compact song data, timestamps, and hashed capabilities. It enforces small requests, nickname/song validation, request limits, a 120-song gallery limit, and 90-day expiration. The API rejects expired boards immediately and runs a daily deletion sweep.
+The teacher key is a separate unguessable capability held only in the teacher browser’s local storage. The gallery service stores only nickname, compact song data, timestamps, and hashed capabilities. It enforces small requests, nickname/song validation, request limits, a 120-song gallery limit, and 90-day expiration. The API rejects expired boards immediately and removes expired records in bounded batches whenever a teacher creates a new board.
 
 ## Develop
 
@@ -35,16 +35,18 @@ Vite prints a local URL. Audio starts only after a user presses Play, as require
 
 ```sh
 npm test          # unit tests
+npm run test:api  # API validation + deployment-contract tests
 npm run test:e2e  # Chromium desktop + 390px mobile, including axe
 npm run build     # reproducible production output in dist/
 npm run preview   # serve dist locally
+npm run test:live # live Function smoke + gallery create/submit/read/delete
 ```
 
-The deployment artifact is `dist/`, with `dist/index.html` at its root. `api/` is an Azure Static Web Apps Standard Function API. In the SWA environment set `GALLERY_STORAGE_CONNECTION` to an Azure Storage connection string with access only to the `gridsonggalleries` table (or use the managed `AzureWebJobsStorage` setting). No value is committed in this repository. `public/staticwebapp.config.json` contains Azure Static Web Apps routes, headers, and cache policy.
+The deployment artifact is `dist/`, with `dist/index.html` at its root. `swa-cli.config.json` is the production deployment contract: it deploys `dist/` and the `api/` HTTP Function together to the Standard `sf-gridsong` Static Web App. Provision the `gridsonggalleries` Azure Table first, then set `GALLERY_STORAGE_CONNECTION` to an HTTPS-only table-scoped SAS connection string with read/add/update/delete access for that table. No value is committed in this repository. After a deployment, run `node scripts/live-api-smoke.mjs` to make sure the live Function, rather than the static fallback, answers `/api/galleries`. `public/staticwebapp.config.json` contains Azure Static Web Apps routes, headers, cache policy, and the Node API runtime.
 
 ## Privacy and data
 
-The current song and teacher access key use browser local storage. A class pass carries only an opaque board reference, a submit-only capability, and expiry; song links contain a composition. The gallery service receives only the nickname and composition necessary for the classroom activity and deletes it after 90 days. Students should use classroom aliases rather than full names. See [/privacy](https://gridsong.sociobot.in/privacy/) and [/terms](https://gridsong.sociobot.in/terms/).
+The current song and teacher access key use browser local storage. A class pass carries only an opaque board reference, a submit-only capability, and expiry; song links contain a composition. The gallery service receives only the nickname and composition necessary for the classroom activity. Boards close at 90 days; expired records are removed in bounded cleanup during later board creation. Students should use classroom aliases rather than full names. See [/privacy](https://gridsong.sociobot.in/privacy/) and [/terms](https://gridsong.sociobot.in/terms/).
 
 ## Design and provenance
 
