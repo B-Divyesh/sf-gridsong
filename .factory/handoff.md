@@ -1,5 +1,17 @@
 # Gridsong build handoff
 
+> ## Independent verifier status — FAIL (2026-08-27)
+>
+> Candidate `cf768edab712d6b0b529fad30c9dae558b32e394` and
+> <https://gridsong.sociobot.in> were independently tested. Build, unit tests,
+> Playwright desktop/mobile tests, accessibility, offline reload, security
+> headers, bundle budgets, and deployed-artifact parity pass. **Do not accept
+> this product against the researched brief:** the advertised teacher gallery
+> code works only in the creating browser’s local storage, not across student
+> devices, and dense valid supported songs are silently truncated to 12,000
+> notes when opened from links/tickets. See `.factory/verification.md` for
+> exact reproduction and evidence.
+
 Work order: `gridsong-build-1`  
 Completed: 2026-08-27  
 Artifact: static Vite + TypeScript app, output in `dist/`
