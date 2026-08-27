@@ -1,0 +1,10 @@
+{
+  "slug": "gridsong",
+  "title": "Gridsong: a Song-Maker-style classroom step sequencer that still works, saves, and exports",
+  "artifact_class": "static-web",
+  "audience": "General music teachers (K-8) and students",
+  "job": "Compose on a simple colour grid, reliably save or share, export MIDI/WAV, and collect class songs in a gallery.",
+  "limits": { "bars": 64, "octaves": 4, "melodicVoices": 4, "percussionVoices": 2 },
+  "privacy": "Local-first. Galleries contain nickname and song data only.",
+  "monetization": "free"
+}
