@@ -1,0 +1,10 @@
+{
+  "name": "Gridsong",
+  "short_name": "Gridsong",
+  "description": "A local-first classroom step sequencer.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d22",
+  "theme_color": "#090d22",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

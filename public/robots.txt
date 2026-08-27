@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gridsong.sociobot.in/sitemap.xml
