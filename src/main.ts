@@ -1,19 +1,20 @@
 import './style.css';
 import { noteName, Player, renderWav, songDuration } from './audio';
+import { createGallery, fetchGallery, GalleryApiError, removeGalleryEntry, submitToGallery, type TeacherGallery } from './gallery-api';
 import { midiBlob } from './midi';
-import { blankSong, entryFromTicket, entryTicket, galleryHash, galleryInviteFromHash, galleryPass, GALLERY_LIFETIME, melodicRows, resizeSong, sanitizeSong, songFromHash, songHash, STEPS_PER_BAR } from './state';
-import type { Gallery, GalleryEntry, GalleryInvite, Song, VoiceName } from './types';
+import { blankSong, galleryHash, galleryInviteFromHash, galleryPass, melodicRows, resizeSong, sanitizeSong, songFromHash, songHash, STEPS_PER_BAR } from './state';
+import type { GalleryEntry, GalleryInvite, Song, VoiceName } from './types';
 
 const SONG_KEY = 'gridsong.song.v1';
-const GALLERY_PREFIX = 'gridsong.gallery.v2.';
-const ACTIVE_GALLERY_KEY = 'gridsong.gallery.v2.active';
+const ACTIVE_GALLERY_KEY = 'gridsong.gallery.v3.active';
 const player = new Player();
 let song = loadInitialSong();
 let currentBar = 0;
 let selectedVoice: VoiceName = 'lantern';
-let activeGallery: Gallery | null = null;
+let activeGallery: TeacherGallery | null = null;
 let classInvite: GalleryInvite | null = null;
 let playStep = -1;
+let galleryPoller = 0;
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="site-header">
@@ -100,8 +101,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </section>
 
     <section class="classroom" aria-labelledby="classroom-title">
-      <div><p class="eyebrow">Made for the lesson loop</p><h2 id="classroom-title">From each desk to one projector</h2><p>Make a class board, then share its student class pass. Students open that pass on any device, make an addressed ticket, and send it back through your classroom channel. Paste tickets into the teacher board to play them.</p><button class="button primary" id="open-gallery-bottom" type="button">Open class gallery</button></div>
-      <ol class="class-steps"><li><span>01</span><strong>Teacher shares a class pass</strong><small>It opens on every student device.</small></li><li><span>02</span><strong>Students make tickets</strong><small>Nickname and song only.</small></li><li><span>03</span><strong>Teacher collects</strong><small>Paste, play, and celebrate.</small></li></ol>
+      <div><p class="eyebrow">Made for the lesson loop</p><h2 id="classroom-title">From each desk to one projector</h2><p>Make a class board, share its student link, and let students send a nickname and song straight to the projector. No accounts or email addresses.</p><button class="button primary" id="open-gallery-bottom" type="button">Open class gallery</button></div>
+      <ol class="class-steps"><li><span>01</span><strong>Teacher shares a class link</strong><small>It opens on every student device.</small></li><li><span>02</span><strong>Students submit a song</strong><small>Nickname and song only.</small></li><li><span>03</span><strong>Projector collects</strong><small>Play and celebrate together.</small></li></ol>
     </section>
   </main>
 
@@ -117,23 +118,22 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <dialog id="gallery-dialog" aria-labelledby="gallery-title">
     <div class="dialog-header"><div><p class="eyebrow">Classroom loop</p><h2 id="gallery-title">Class gallery</h2></div><button class="icon-button" id="close-gallery" type="button" aria-label="Close gallery">×</button></div>
     <div id="gallery-start">
-      <p>Create a board on the teacher device. You will get a shareable student class pass, not a browser-only room code.</p>
+      <p>Create a 90-day board on the teacher device. You will get a shareable student class link; submissions arrive here automatically.</p>
       <button class="button primary" id="create-gallery" type="button">Create class board</button>
-      <p class="privacy-note">There is no shared server or live feed. The teacher board is saved in this browser for 90 days; student tickets are carried directly between devices.</p>
+      <p class="privacy-note">The gallery keeps only nickname and song data for 90 days. There are no accounts, email addresses, or student gallery browsing.</p>
     </div>
     <div id="gallery-board" hidden>
       <div class="code-ticket"><span>Student class pass</span><strong id="gallery-pass-status">Ready to share</strong><button class="button quiet" id="copy-pass" type="button">Copy student pass</button></div>
-      <p class="privacy-note">1. Share the pass with students. 2. They open it on their own device and send back a ticket. 3. Paste each ticket below. No submission is uploaded or automatically synced.</p>
+      <p class="privacy-note">Share the pass. Students open it, choose a nickname, and submit their song directly to this board. New songs check in automatically while this window is open.</p>
       <details class="student-submit"><summary>Add this device’s song to the board</summary><label for="board-nickname">Nickname or label</label><div class="submit-row"><input id="board-nickname" maxlength="24" autocomplete="off"><button class="button primary" id="add-local" type="button">Add to board</button></div></details>
-      <details class="teacher-collect" open><summary>Collect a student ticket</summary><label for="ticket-input">Paste a student’s GS2T ticket</label><textarea id="ticket-input" rows="3"></textarea><button class="button secondary" id="add-ticket" type="button">Add submission</button></details>
       <div class="gallery-list-heading"><h3>Submissions</h3><span id="submission-count">0 songs</span></div>
       <div id="gallery-list" class="gallery-list"></div>
     </div>
     <div id="gallery-student" hidden>
-      <p class="student-pass-title"><strong>You opened a student class pass.</strong> Compose your song, add a classroom nickname, then copy the addressed ticket to your teacher.</p>
-      <ol class="pass-steps"><li>This pass works across devices, but it does not show the teacher’s private board.</li><li>Copy your ticket and send it through your teacher’s approved classroom channel.</li><li>Your teacher pastes the ticket into their board to add it.</li></ol>
+      <p class="student-pass-title"><strong>You opened a student class pass.</strong> Compose your song, add a classroom nickname, and send it to your teacher’s projector.</p>
+      <ol class="pass-steps"><li>This pass works across devices, but it does not show the teacher’s private board.</li><li>Use a classroom alias, not your full name.</li><li>Submit once you have at least one note. Your teacher will see it on the board.</li></ol>
       <button class="button primary" id="student-compose" type="button">Start composing</button>
-      <details class="student-submit" open><summary>Make my submission ticket</summary><label for="student-nickname">Student nickname</label><div class="submit-row"><input id="student-nickname" maxlength="24" autocomplete="off"><button class="button primary" id="copy-student-ticket" type="button">Copy my ticket</button></div><p class="hint">Your nickname and song travel in the ticket. Use an alias, not your full name.</p></details>
+      <details class="student-submit" open><summary>Send my song</summary><label for="student-nickname">Student nickname</label><div class="submit-row"><input id="student-nickname" maxlength="24" autocomplete="off"><button class="button primary" id="submit-student-song" type="button">Send to class gallery</button></div><p class="hint">Your nickname and song are kept for 90 days. Use an alias, not your full name.</p></details>
     </div>
   </dialog>
 `;
@@ -398,82 +398,87 @@ async function copyText(value: string, success: string): Promise<void> {
   }
 }
 
-function galleryStorageKey(id: string): string { return `${GALLERY_PREFIX}${id}`; }
-
-function saveGallery(): void {
-  if (!activeGallery) return;
+function saveTeacherAccess(gallery: TeacherGallery): void {
   try {
-    localStorage.setItem(galleryStorageKey(activeGallery.id), JSON.stringify(activeGallery));
-    localStorage.setItem(ACTIVE_GALLERY_KEY, activeGallery.id);
+    localStorage.setItem(ACTIVE_GALLERY_KEY, JSON.stringify({ id: gallery.id, teacherKey: gallery.teacherKey, studentKey: gallery.studentKey }));
+  } catch { showToast('Keep this tab open: browser storage is unavailable for the teacher key.'); }
+}
+
+function loadTeacherAccess(): Pick<TeacherGallery, 'id' | 'teacherKey' | 'studentKey'> | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(ACTIVE_GALLERY_KEY) ?? '') as Partial<TeacherGallery>;
+    return typeof value.id === 'string' && typeof value.teacherKey === 'string' && typeof value.studentKey === 'string' ? value as Pick<TeacherGallery, 'id' | 'teacherKey' | 'studentKey'> : null;
+  } catch { return null; }
+}
+
+async function restoreTeacherGallery(): Promise<void> {
+  const access = loadTeacherAccess();
+  if (!access) return;
+  try {
+    const gallery = await fetchGallery(access.id, access.teacherKey);
+    activeGallery = { ...gallery, ...access };
+  } catch (error) {
+    if (error instanceof GalleryApiError && error.status === 410) localStorage.removeItem(ACTIVE_GALLERY_KEY);
   }
-  catch { showToast('This gallery could not be saved. Copy song links before closing.'); }
-}
-
-function loadGallery(id: string): Gallery | null {
-  try {
-    const value = localStorage.getItem(galleryStorageKey(id));
-    if (!value) return null;
-    const gallery = JSON.parse(value) as Gallery;
-    if (gallery.id !== id || !Array.isArray(gallery.entries) || typeof gallery.createdAt !== 'number') return null;
-    if (Date.now() - gallery.createdAt > GALLERY_LIFETIME) {
-      localStorage.removeItem(galleryStorageKey(id));
-      if (localStorage.getItem(ACTIVE_GALLERY_KEY) === id) localStorage.removeItem(ACTIVE_GALLERY_KEY);
-      return null;
-    }
-    return gallery;
-  } catch { return null; }
-}
-
-function loadLastGallery(): Gallery | null {
-  try {
-    const id = localStorage.getItem(ACTIVE_GALLERY_KEY);
-    return id ? loadGallery(id) : null;
-  } catch { return null; }
 }
 
 function activateGalleryFromHash(): string | null {
   try {
     const invite = galleryInviteFromHash(location.hash);
-    if (invite) {
-      activeGallery = loadGallery(invite.galleryId);
-      classInvite = activeGallery ? null : invite;
-    } else {
-      classInvite = null;
-      activeGallery = loadLastGallery();
-    }
+    classInvite = invite;
+    if (invite) activeGallery = null;
     return null;
+  } catch (error) { return error instanceof Error ? error.message : 'That class pass could not be opened.'; }
+}
+
+async function refreshGallery(silent = false): Promise<void> {
+  if (!activeGallery) return;
+  try {
+    const gallery = await fetchGallery(activeGallery.id, activeGallery.teacherKey);
+    activeGallery = { ...gallery, teacherKey: activeGallery.teacherKey, studentKey: activeGallery.studentKey };
+    renderGallery();
   } catch (error) {
-    classInvite = null;
-    activeGallery = loadLastGallery();
-    return error instanceof Error ? error.message : 'That class pass could not be opened.';
+    if (!silent || (error instanceof GalleryApiError && error.status === 410)) showToast(error instanceof Error ? error.message : 'The gallery could not refresh.');
+    if (error instanceof GalleryApiError && error.status === 410) { activeGallery = null; localStorage.removeItem(ACTIVE_GALLERY_KEY); renderGallery(); }
   }
 }
 
-function openGallery(): void {
+async function openGallery(): Promise<void> {
   if (!galleryDialog.open) galleryDialog.showModal();
+  if (!classInvite && !activeGallery) await restoreTeacherGallery();
   renderGallery();
+  if (activeGallery && !galleryPoller) galleryPoller = window.setInterval(() => void refreshGallery(true), 5000);
 }
 
-[get('open-gallery'), get('open-gallery-bottom')].forEach(button => button.addEventListener('click', openGallery));
-get<HTMLButtonElement>('close-gallery').addEventListener('click', () => galleryDialog.close());
-galleryDialog.addEventListener('click', event => { if (event.target === galleryDialog) galleryDialog.close(); });
+[get('open-gallery'), get('open-gallery-bottom')].forEach(button => button.addEventListener('click', () => void openGallery()));
+function closeGallery(): void { galleryDialog.close(); if (galleryPoller) { clearInterval(galleryPoller); galleryPoller = 0; } }
+get<HTMLButtonElement>('close-gallery').addEventListener('click', closeGallery);
+galleryDialog.addEventListener('click', event => { if (event.target === galleryDialog) closeGallery(); });
+galleryDialog.addEventListener('close', () => { if (galleryPoller) { clearInterval(galleryPoller); galleryPoller = 0; } });
 get<HTMLButtonElement>('student-compose').addEventListener('click', () => {
   galleryDialog.close();
   document.getElementById('composer')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   queueMicrotask(() => titleInput.focus());
 });
 
-get<HTMLButtonElement>('create-gallery').addEventListener('click', () => {
-  activeGallery = { id: crypto.randomUUID(), createdAt: Date.now(), entries: [] };
-  classInvite = null;
-  saveGallery();
-  renderGallery();
-  showToast('Class board created. Copy the student class pass to invite students.');
+get<HTMLButtonElement>('create-gallery').addEventListener('click', async () => {
+  const button = get<HTMLButtonElement>('create-gallery');
+  button.disabled = true;
+  button.textContent = 'Creating board…';
+  try {
+    activeGallery = await createGallery();
+    classInvite = null;
+    saveTeacherAccess(activeGallery);
+    renderGallery();
+    if (!galleryPoller) galleryPoller = window.setInterval(() => void refreshGallery(true), 5000);
+    showToast('Class board created. Copy the student pass to invite students.');
+  } catch (error) { showToast(error instanceof Error ? error.message : 'The class board could not be created.'); }
+  finally { button.disabled = false; button.textContent = 'Create class board'; }
 });
 
 get<HTMLButtonElement>('copy-pass').addEventListener('click', () => {
   if (!activeGallery) return;
-  const pass = galleryPass(activeGallery.id, activeGallery.createdAt);
+  const pass = galleryPass(activeGallery.id, activeGallery.studentKey, activeGallery.expiresAt);
   const url = `${location.origin}${location.pathname}${galleryHash(pass)}`;
   void copyText(url, 'Student class pass copied. It opens on another device.');
 });
@@ -485,33 +490,27 @@ function makeCurrentEntry(inputId: string): GalleryEntry | null {
   return { id: crypto.randomUUID(), nickname: nickname.slice(0, 24), createdAt: Date.now(), song: structuredClone(song) };
 }
 
-get<HTMLButtonElement>('add-local').addEventListener('click', () => {
+get<HTMLButtonElement>('add-local').addEventListener('click', async () => {
   const entry = makeCurrentEntry('board-nickname');
   if (!entry || !activeGallery) return;
-  activeGallery.entries.push(entry);
-  saveGallery();
-  renderGallery();
-  showToast(`${entry.nickname}’s song added.`);
+  try {
+    await submitToGallery({ galleryId: activeGallery.id, submitKey: activeGallery.studentKey }, entry.nickname, entry.song);
+    await refreshGallery(true);
+    showToast(`${entry.nickname}’s song added.`);
+  } catch (error) { showToast(error instanceof Error ? error.message : 'The song could not be added.'); }
 });
 
-get<HTMLButtonElement>('copy-student-ticket').addEventListener('click', () => {
+get<HTMLButtonElement>('submit-student-song').addEventListener('click', async () => {
   const entry = makeCurrentEntry('student-nickname');
   if (!entry || !classInvite) return;
-  void copyText(entryTicket(entry, classInvite.galleryId), 'Submission ticket copied. Send it to your teacher.');
-});
-
-get<HTMLButtonElement>('add-ticket').addEventListener('click', () => {
-  if (!activeGallery) return;
+  const button = get<HTMLButtonElement>('submit-student-song');
+  button.disabled = true;
+  button.textContent = 'Sending…';
   try {
-    const ticket = entryFromTicket(get<HTMLTextAreaElement>('ticket-input').value);
-    if (ticket.galleryId !== activeGallery.id) { showToast('That ticket belongs to a different class pass. Ask the student to reopen your pass.'); return; }
-    if (activeGallery.entries.some(item => item.id === ticket.entry.id)) { showToast('That submission is already in this gallery.'); return; }
-    activeGallery.entries.push(ticket.entry);
-    get<HTMLTextAreaElement>('ticket-input').value = '';
-    saveGallery();
-    renderGallery();
-    showToast(`${ticket.entry.nickname}’s ticket added.`);
-  } catch (error) { showToast(error instanceof Error ? error.message : 'That ticket could not be read.'); }
+    await submitToGallery(classInvite, entry.nickname, entry.song);
+    showToast('Song sent to the class gallery. Your teacher can play it now.');
+  } catch (error) { showToast(error instanceof Error ? error.message : 'The song could not be sent.'); }
+  finally { button.disabled = false; button.textContent = 'Send to class gallery'; }
 });
 
 function renderGallery(): void {
@@ -527,7 +526,7 @@ function renderGallery(): void {
   if (!activeGallery.entries.length) {
     const empty = document.createElement('div');
     empty.className = 'empty-gallery';
-    empty.innerHTML = '<span aria-hidden="true">♫</span><strong>The stage is quiet</strong><p>Add this song or paste a student ticket above.</p>';
+    empty.innerHTML = '<span aria-hidden="true">♫</span><strong>The stage is quiet</strong><p>Share the student pass, then new songs will appear here.</p>';
     list.append(empty);
     return;
   }
@@ -551,9 +550,10 @@ function renderGallery(): void {
       void get<HTMLButtonElement>('play').click();
     });
     remove.className = 'button quiet danger'; remove.type = 'button'; remove.textContent = 'Remove';
-    remove.addEventListener('click', () => {
+    remove.addEventListener('click', async () => {
       if (!activeGallery || !confirm(`Remove ${entry.nickname}’s “${entry.song.title}” from this gallery?`)) return;
-      activeGallery.entries = activeGallery.entries.filter(item => item.id !== entry.id); saveGallery(); renderGallery(); showToast('Submission removed.');
+      try { await removeGalleryEntry(activeGallery.id, entry.id, activeGallery.teacherKey); await refreshGallery(true); showToast('Submission removed.'); }
+      catch (error) { showToast(error instanceof Error ? error.message : 'The submission could not be removed.'); }
     });
     actions.append(load, remove);
     article.append(copy, actions);
@@ -569,7 +569,7 @@ window.addEventListener('offline', updateOnlineState);
 window.addEventListener('hashchange', () => {
   const passError = activateGalleryFromHash();
   if (passError) showToast(passError);
-  if (galleryDialog.open) renderGallery();
+  if (galleryDialog.open) void openGallery();
   try {
     const linked = songFromHash(location.hash);
     if (linked) { stopPlayback(); song = linked; currentBar = 0; syncControls(); commit('Song opened from its link'); }
@@ -582,8 +582,14 @@ saveLocal();
 updateOnlineState();
 const initialPassError = activateGalleryFromHash();
 if (initialPassError) queueMicrotask(() => showToast(initialPassError));
-if (classInvite) queueMicrotask(openGallery);
+if (classInvite) queueMicrotask(() => void openGallery());
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined));
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').then(registration => {
+    const tellAboutUpdate = () => showToast('A Gridsong update is ready. Refresh between songs to use it.');
+    if (registration.waiting) tellAboutUpdate();
+    registration.addEventListener('updatefound', () => registration.installing?.addEventListener('statechange', () => {
+      if (registration.installing?.state === 'installed' && navigator.serviceWorker.controller) tellAboutUpdate();
+    }));
+  }).catch(() => undefined));
 }

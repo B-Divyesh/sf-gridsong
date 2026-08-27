@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blankSong, decode, encode, entryFromTicket, entryTicket, galleryHash, galleryInviteFromHash, galleryPass, gridCapacity, noteMidi, resizeSong, sanitizeSong, songFromHash, songHash } from './state';
+import { blankSong, decode, encode, galleryHash, galleryInviteFromHash, galleryPass, gridCapacity, noteMidi, resizeSong, sanitizeSong, songFromHash, songHash } from './state';
 
 describe('song state', () => {
   it('round-trips unicode state through a URL hash', () => {
@@ -22,16 +22,15 @@ describe('song state', () => {
     expect(noteMidi(song, 0)).toBeGreaterThan(noteMidi(song, 1));
   });
 
-  it('round-trips gallery tickets addressed to a portable class pass', () => {
-    const entry = { id: '12345678-1234-4234-9234-123456789abd', nickname: 'Rae', createdAt: 1, song: blankSong() };
-    const galleryId = '12345678-1234-4234-9234-123456789abc';
-    expect(entryFromTicket(entryTicket(entry, galleryId))).toEqual({ galleryId, entry });
-  });
-
   it('opens the same class pass from a self-contained URL hash', () => {
     const galleryId = '12345678-1234-4234-9234-123456789abc';
-    const pass = galleryPass(galleryId, Date.now());
-    expect(galleryInviteFromHash(galleryHash(pass))).toMatchObject({ galleryId });
+    const submitKey = 'abcdeFGHIJ0123456789_-abcdeFGHIJ0123456789';
+    const pass = galleryPass(galleryId, submitKey, Date.now() + 60_000);
+    expect(galleryInviteFromHash(galleryHash(pass))).toMatchObject({ galleryId, submitKey });
+  });
+
+  it('gives a child-friendly recovery message for malformed legacy links', () => {
+    expect(() => songFromHash('#song=not-valid-base64')).toThrow(/got tangled/i);
   });
 
   it('round-trips every valid note in the 64-bar four-octave grid', () => {

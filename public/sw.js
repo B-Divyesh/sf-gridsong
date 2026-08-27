@@ -1,5 +1,5 @@
-const CACHE = 'gridsong-shell-v3';
-const SHELL = ['/icon.svg', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/privacy/', '/terms/'];
+const CACHE = 'gridsong-shell-v4';
+const SHELL = ['/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/privacy/', '/terms/'];
 
 async function cacheShell() {
   const cache = await caches.open(CACHE);
@@ -14,13 +14,19 @@ async function cacheShell() {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(cacheShell().then(() => self.skipWaiting()));
+  event.waitUntil(cacheShell());
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  // Classroom submissions are private, short-lived data. Never cache a gallery
+  // response: it must be fresh and must disappear when the service says expired.
+  if (new URL(event.request.url).pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
     if (response.ok && new URL(event.request.url).origin === location.origin) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
     return response;

@@ -1,4 +1,4 @@
-import type { GalleryEntry, GalleryInvite, GalleryTicket, Song, SongNote } from './types';
+import type { GalleryInvite, Song, SongNote } from './types';
 
 export const STEPS_PER_BAR = 16;
 export const GALLERY_LIFETIME = 90 * 24 * 60 * 60 * 1000;
@@ -12,7 +12,6 @@ export const SCALE_INTERVALS = {
 const SCALE_NAMES = Object.keys(SCALE_INTERVALS) as Song['scale'][];
 const VOICES: Array<SongNote['voice']> = ['lantern', 'reed', 'bell', 'pluck', 'kick', 'clap'];
 const SONG_PREFIX = 'GS2S.';
-const TICKET_PREFIX = 'GS2T.';
 const INVITE_PREFIX = 'GSP1.';
 
 export function blankSong(): Song {
@@ -156,8 +155,12 @@ export function songFromHash(hash: string): Song | null {
   const params = new URLSearchParams(hash.replace(/^#/, ''));
   const encoded = params.get('song');
   if (!encoded) return null;
-  // Read existing JSON links too; new links are compact GS2S payloads.
-  return encoded.startsWith(SONG_PREFIX) ? decodeSong(encoded) : sanitizeSong(decode(encoded));
+  try {
+    // Read existing JSON links too; new links are compact GS2S payloads.
+    return encoded.startsWith(SONG_PREFIX) ? decodeSong(encoded) : sanitizeSong(decode(encoded));
+  } catch {
+    throw new Error('That song link got tangled. You can start a fresh song or ask for a new link.');
+  }
 }
 
 export function songHash(song: Song, existingHash = ''): string {
@@ -170,17 +173,18 @@ function isGalleryId(value: unknown): value is string {
   return typeof value === 'string' && /^[a-z0-9-]{16,80}$/i.test(value);
 }
 
-export function galleryPass(galleryId: string, createdAt: number): string {
+export function galleryPass(galleryId: string, submitKey: string, expiresAt: number): string {
   if (!isGalleryId(galleryId)) throw new Error('This gallery identifier is not valid.');
-  return `${INVITE_PREFIX}${encode({ v: 1, galleryId, expiresAt: createdAt + GALLERY_LIFETIME } satisfies GalleryInvite)}`;
+  if (typeof submitKey !== 'string' || !/^[a-z0-9_-]{32,128}$/i.test(submitKey) || !Number.isFinite(expiresAt)) throw new Error('This class pass is not valid.');
+  return `${INVITE_PREFIX}${encode({ v: 1, galleryId, submitKey, expiresAt } satisfies GalleryInvite)}`;
 }
 
 export function galleryInviteFromPass(value: string): GalleryInvite {
   if (!value.startsWith(INVITE_PREFIX)) throw new Error('That class pass is not valid.');
   const invite = decode<Partial<GalleryInvite>>(value.slice(INVITE_PREFIX.length));
-  if (invite.v !== 1 || !isGalleryId(invite.galleryId) || typeof invite.expiresAt !== 'number') throw new Error('That class pass is not valid.');
+  if (invite.v !== 1 || !isGalleryId(invite.galleryId) || typeof invite.submitKey !== 'string' || !/^[a-z0-9_-]{32,128}$/i.test(invite.submitKey) || typeof invite.expiresAt !== 'number') throw new Error('That class pass is not valid.');
   if (Date.now() > invite.expiresAt) throw new Error('That class pass has expired. Ask the teacher for a new one.');
-  return { v: 1, galleryId: invite.galleryId, expiresAt: invite.expiresAt };
+  return { v: 1, galleryId: invite.galleryId, submitKey: invite.submitKey, expiresAt: invite.expiresAt };
 }
 
 export function galleryInviteFromHash(hash: string): GalleryInvite | null {
@@ -192,35 +196,6 @@ export function galleryHash(pass: string, existingHash = ''): string {
   const params = new URLSearchParams(existingHash.replace(/^#/, ''));
   params.set('gallery', pass);
   return `#${params.toString()}`;
-}
-
-export function entryTicket(entry: GalleryEntry, galleryId: string): string {
-  if (!isGalleryId(galleryId)) throw new Error('This ticket has no valid class pass.');
-  const clean = {
-    id: isGalleryId(entry.id) ? entry.id : crypto.randomUUID(),
-    nickname: entry.nickname.trim().slice(0, 24),
-    createdAt: Number.isFinite(entry.createdAt) ? entry.createdAt : Date.now(),
-    song: encodeSong(entry.song)
-  };
-  if (!clean.nickname) throw new Error('This ticket is missing a nickname.');
-  return `${TICKET_PREFIX}${encode({ v: 2, galleryId, entry: clean })}`;
-}
-
-export function entryFromTicket(ticket: string): GalleryTicket {
-  if (!ticket.trim().startsWith(TICKET_PREFIX)) throw new Error('That ticket is not a current Gridsong class ticket. Ask the student to open the class pass again.');
-  const raw = decode<{ v?: number; galleryId?: unknown; entry?: Partial<GalleryEntry> & { song?: unknown } }>(ticket.trim().slice(TICKET_PREFIX.length));
-  if (raw.v !== 2 || !isGalleryId(raw.galleryId) || !raw.entry || typeof raw.entry.nickname !== 'string' || !raw.entry.nickname.trim() || typeof raw.entry.song !== 'string') {
-    throw new Error('That ticket is missing its class pass, nickname, or song.');
-  }
-  return {
-    galleryId: raw.galleryId,
-    entry: {
-      id: isGalleryId(raw.entry.id) ? raw.entry.id : crypto.randomUUID(),
-      nickname: raw.entry.nickname.trim().slice(0, 24),
-      createdAt: typeof raw.entry.createdAt === 'number' ? raw.entry.createdAt : Date.now(),
-      song: decodeSong(raw.entry.song)
-    }
-  };
 }
 
 export function resizeSong(song: Song, bars: number, octaves: number, scale: Song['scale']): Song {

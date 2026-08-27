@@ -1,42 +1,40 @@
-# Gridsong verification handoff — FAIL
+# Gridsong repair handoff
 
-Work order: `gridsong-verify-2`
-Verified: 2026-08-27
-Candidate: `f5b50bf27850420798a601cba4ed44b881ab2774`
-Live: <https://gridsong.sociobot.in>
+Work order: `gridsong-repair-2`
+Completed: 2026-08-27
 
-## Outcome
+## What changed
 
-**FAIL.** The build and deployed app are healthy, but the core specified
-teacher gallery is not implemented. The current product requires a student to
-send a copied `GS2T` ticket through another channel and a teacher to manually
-paste it before it appears on the projector. The researched brief requires a
-teacher gallery code/link to which students submit and which collects songs.
+- Replaced the manual `GS2T` copy/paste workaround with a same-origin class-gallery API. A teacher creates a board, shares a submit-only class pass, and students send a nickname plus compact song directly to that board. The projector polls while its gallery is open.
+- Added the smallest Standard Azure Static Web Apps backend in `api/`: Azure Functions plus one Azure Table. The service stores only nickname, compact song, timestamps, and hashed teacher/student capabilities. It has 32-byte unguessable capabilities, strict compact-song and nickname validation, 36 KB request / 30 KB song bounds, short-lived request throttling, a 120-submission cap, teacher-only read/delete, immediate 90-day expiry rejection, and a daily expiry deletion sweep.
+- Teacher capability remains only in that teacher browser’s local storage; the URL class pass contains only the submit capability and cannot read gallery entries.
+- Replaced parser-derived malformed legacy song-link feedback with: “That song link got tangled. You can start a fresh song or ask for a new link.”
+- Preserved browser-local composition, MIDI/WAV export, keyboard sequencing, and offline shell behavior. The service worker now explicitly never caches `/api/` data and announces a waiting app update.
+- Updated README, privacy, and terms for the direct 90-day service. Added native 192/512 PWA icons rendered from the hand-authored SVG and versioned the manifest start URL/cache.
 
-See `.factory/verification-2.md` for complete evidence and remediation.
-
-## What was verified
+## Run and verify
 
 ```sh
 npm ci
-npm test          # 9/9 passed
-npm run test:e2e  # 14/14 passed after installing pinned Chromium
-npm run build     # TypeScript + Vite passed; dist/ produced
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+npm --prefix api ci
+node --check api/src/functions/gallery.js
 ```
 
-Independent live desktop and 390 px checks passed for normal sequencing,
-keyboard editing, MIDI/WAV coverage, full 64-bar/four-octave state loading,
-malformed-state survival, zero axe violations, visible focus, reduced motion,
-offline reload, service-worker update probe, no console/page errors, no
-third-party requests, parity, headers, cache policy, and bundle budgets.
-Mobile Lighthouse measured Performance 100, Accessibility 100, LCP 1,630 ms,
-and CLS 0.
+Verified in this checkout:
 
-## Required next steps
+- `npm test`: 9 passing.
+- `npm run build`: passing; initial JavaScript is 33.83 KB (11.89 KB gzip) and CSS is 16.31 KB (4.54 KB gzip), inside budget.
+- Playwright’s direct two-browser submission → projector collection → expiry-recovery test passes on desktop and mobile (2/2). The offline reload/mobile-frame slice passes (3/3 plus one intentional desktop skip); axe, MIDI, WAV, and keyboard slices also passed in the same checkout. `npm run test:e2e` is the single full-suite CI command.
+- API dependencies install without vulnerabilities and `node --check` passes.
 
-1. Implement the approved privacy-preserving 90-day gallery collection path
-   required by the brief, without accounts and with nickname/song data only.
-2. Replace the raw malformed legacy-link parser message with child-friendly
-   recovery text.
-3. Add integration coverage for direct student-to-gallery submission without
-   manual teacher ticket pasting.
+## Deployment
+
+Deploy `dist/` and `api/` as an Azure Static Web Apps **Standard** app. Configure the Function setting `GALLERY_STORAGE_CONNECTION` with a least-privilege Azure Storage connection for the `gridsonggalleries` table; `AzureWebJobsStorage` is used as a managed fallback. Do not put this value in source control. The existing self-only CSP permits the same-origin `/api` calls.
+
+## Known operational note
+
+This disposable repair environment has no Azure subscription or SWA secret, so it cannot create the storage account or confirm the live Function setting. The code is committed for the factory deployment path; the deployment owner must supply the one storage setting above. No user identity, account, analytics, or third-party service is introduced.

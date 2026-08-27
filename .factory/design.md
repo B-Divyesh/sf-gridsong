@@ -54,5 +54,4 @@ The hero asset is an original, generated editorial still-life: a tabletop step-s
 - Materials: matte painted wood, folded paper, frosted lantern glass, subtle grain
 - Negative list: no words, letters, numbers, logos, watermark, Google styling, Chrome colours, keyboards, screens, photorealistic people, hands, brand marks, excessive bloom
 
-Generated with the factory Azure image model (`factory-image`) on 2026-08-27. The final file and its exact prompt sidecar live in `assets/src/`. Generated imagery is original to this product and used under the repository’s MIT license.
-
+Generated with the factory Azure image model (`factory-image`) on 2026-08-27. The final file and its exact prompt sidecar live in `assets/src/`. Generated imagery is original to this product and used under the repository’s MIT license. The PWA icons are raster exports of the repository’s hand-authored `public/icon.svg`; no third-party icon asset was used.
