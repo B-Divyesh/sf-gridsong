@@ -1,8 +1,20 @@
-const CACHE = 'gridsong-shell-v1';
-const SHELL = ['/', '/icon.svg', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/privacy/', '/terms/'];
+const CACHE = 'gridsong-shell-v3';
+const SHELL = ['/icon.svg', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/privacy/', '/terms/'];
+
+async function cacheShell() {
+  const cache = await caches.open(CACHE);
+  // Vite hashes the app JS/CSS. Discover those files from the just-built shell
+  // during installation so an offline first reload has both the HTML and code.
+  const root = await fetch('/', { cache: 'no-cache' });
+  if (!root.ok) throw new Error('Could not cache the Gridsong app shell.');
+  await cache.put('/', root.clone());
+  const html = await root.text();
+  const assets = Array.from(html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g), match => match[1]);
+  await cache.addAll([...SHELL, ...assets]);
+}
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(cacheShell().then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));

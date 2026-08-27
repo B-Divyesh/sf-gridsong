@@ -25,7 +25,18 @@ export interface GalleryEntry {
 }
 
 export interface Gallery {
-  code: string;
+  id: string;
   createdAt: number;
   entries: GalleryEntry[];
+}
+
+export interface GalleryInvite {
+  v: 1;
+  galleryId: string;
+  expiresAt: number;
+}
+
+export interface GalleryTicket {
+  galleryId: string;
+  entry: GalleryEntry;
 }

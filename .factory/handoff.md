@@ -1,63 +1,43 @@
-# Gridsong build handoff
+# Gridsong repair handoff
 
-> ## Independent verifier status — FAIL (2026-08-27)
->
-> Candidate `cf768edab712d6b0b529fad30c9dae558b32e394` and
-> <https://gridsong.sociobot.in> were independently tested. Build, unit tests,
-> Playwright desktop/mobile tests, accessibility, offline reload, security
-> headers, bundle budgets, and deployed-artifact parity pass. **Do not accept
-> this product against the researched brief:** the advertised teacher gallery
-> code works only in the creating browser’s local storage, not across student
-> devices, and dense valid supported songs are silently truncated to 12,000
-> notes when opened from links/tickets. See `.factory/verification.md` for
-> exact reproduction and evidence.
+Work order: `gridsong-repair-1`
+Completed: 2026-08-27
+Artifact: static Vite + TypeScript app; deploy `dist/`
 
-Work order: `gridsong-build-1`  
-Completed: 2026-08-27  
-Artifact: static Vite + TypeScript app, output in `dist/`
+## Repaired blockers
 
-## What was built
+- Replaced the browser-local six-character gallery lookup with a truthful static cross-device handoff. A teacher board creates a portable **student class pass** URL (`GSP1`); a student can open it in a fresh browser/device, compose, and make an addressed `GS2T` ticket. The teacher pastes that ticket into the local projector board. The UI, README, privacy notice, and terms explain that this is a deliberate handoff, not a live shared remote gallery.
+- The pass contains an opaque board reference and expiry only. A ticket contains that destination reference, the student’s voluntary classroom nickname, and the song. Neither is sent to a Gridsong API, and there is no server-side gallery persistence, account, analytics, or COPPA-sensitive collection.
+- Replaced JSON song hashes with a compact 3-bit-per-grid-cell `GS2S` format. It losslessly carries every note in the documented maximum 64-bar, four-octave chromatic grid (50 × 1,024 = 51,200 notes) in a URL hash under 30 KB. Import never slices notes: it rejects structurally impossible/ambiguous data with a clear message. Existing JSON song links remain readable.
+- Kept local autosave, MIDI export, browser WAV export, song URLs, 90-day local teacher-board policy, offline shell behavior, keyboard navigation, and mobile grid scrolling intact. The service worker now discovers and precaches Vite’s hashed app JS/CSS on install (`gridsong-shell-v3`).
 
-- Responsive, bar-paged step sequencer with 1–64 bars, 1–4 octaves, 50–200 BPM, and major/minor/pentatonic/chromatic scales.
-- Four original Web Audio patches (Lantern, Reed, Bell, Pluck) plus synthesized kick and clap. No samples or third-party audio.
-- Local autosave, complete song state in copyable URL hashes, defensive link parsing, new-song confirmation, empty/error/offline feedback, and reduced-motion behavior.
-- Client-side standard MIDI and stereo WAV export with tested browser downloads.
-- Local-first classroom gallery: six-character code, nickname-only entries, projector-ready list/playback, removal confirmation, 90-day policy, duplicate protection, and portable `GS1` submission tickets for moving work between devices.
-- Keyboard-operable note toggles with arrow navigation, native pressed states, visible focus, at least 44px note targets, and a 390px layout whose grid scrolls inside its frame.
-- Original night-market illustration generated through the factory Azure image model, visually reviewed, and optimized to an 80 KB WebP. Source, exact prompt, and provenance are in `assets/src/` and `.factory/design.md`.
-- Installable/offline shell, privacy and terms pages, Azure Static Web Apps security/cache configuration, sitemap, robots file, and no analytics, CDN assets, accounts, or runtime third parties.
-
-## Run and verify
+## How to run and verify
 
 ```sh
-npm install
+npm ci
 npm test
 npm run test:e2e
 npm run build
 npm run preview
 ```
 
-`npm run build` is the deployment command. It produces `dist/index.html` at the required root.
+`npm run build` produces `dist/index.html` for deployment.
 
-Verification completed locally on 2026-08-27:
+Local verification completed on 2026-08-27:
 
-- `npm test`: 7/7 unit tests passed (URL state, validation, resize behavior, pitch mapping, gallery tickets, MIDI structure).
-- `npm run test:e2e`: 11 passed, 1 intentionally skipped desktop-only duplicate. Chromium desktop and 390×844 mobile covered console errors, axe WCAG A/AA, local restore, keyboard grid editing, MIDI/WAV download, gallery submit, and mobile overflow.
-- `npm run build`: passed TypeScript strict checking and Vite production build.
-- Production payload: 26.79 KB JS (9.77 KB gzip), 16.22 KB CSS (4.53 KB gzip), 80 KB hero WebP; total Lighthouse transfer 97 KiB.
-- Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.8s, CLS 0. INP is not produced by a no-interaction lab run.
-- Factory `verify-url.sh`: HTTP 200, load 566ms, zero console/page errors, `lang=en`, exactly one h1, main landmark present, zero missing alt attributes, zero unlabeled buttons.
-- Full-page desktop and 390px mobile screenshots were visually reviewed; no page-level mobile overflow.
+- `npm test`: **9/9** passed, including the full 51,200-note compact URL round trip and portable class-pass/ticket parsing.
+- `npm run test:e2e`: **13 passed, 1 intentionally skipped** across Chromium desktop and 390×844 mobile. This includes axe WCAG A/AA scanning, no-console-error load, local restore, keyboard/MIDI/WAV, an independent teacher/student browser-context class-pass → ticket → teacher-import flow, cached offline reload, and mobile overflow.
+- `npm run build`: passed TypeScript and Vite. Initial JS is 32.15 KB (11.35 KB gzip); CSS is 16.31 KB (4.54 KB gzip), both within the static-app budget.
+- Browser checks above provide the required axe and offline coverage. The app remains self-contained with no runtime outbound requests or third-party assets.
+- A production `vite preview` live check returned HTTP 200 for `/`, `/privacy/`, and `/terms/`; the hashed JS was served with immutable cache headers.
 
 ## Known boundaries
 
-- This is a static, privacy-first product, so a gallery is not a live remote database. The teacher’s board persists in that browser; students move compositions across devices with copyable submission tickets. The interface and README state this plainly. True shared remote galleries would require an approved backend and a separate privacy/data-retention review.
-- Browsers can remove local storage, especially in private mode. Important work should be kept as a song link, WAV, or MIDI.
-- Rendering a very dense 64-bar WAV can use substantial memory on low-end devices; the UI reports a useful failure and MIDI remains available.
-- The generated PNG source is intentionally retained for provenance; only the optimized WebP ships in `dist/`.
+- The class pass is an explicit, asynchronous device-to-device handoff. It is not a live room and student tickets do not appear on the projector until the teacher receives and pastes them. This is intentional for a static, no-server, privacy-first product.
+- Teacher boards are stored in that teacher browser for up to 90 days. Clearing browser storage, private-browsing limits, or device loss can remove them; song links, MIDI, and WAV remain the backup/export paths.
+- A dense 64-bar WAV can use substantial memory on low-end devices. The UI reports render failure and MIDI remains available.
 
 ## Suggested next steps
 
-- Classroom usability test with touch-only students and VoiceOver on a physical iPad.
-- If an approved first-party persistence API becomes available, add opt-in remote gallery sync while keeping ticket export and local mode.
-- Add teacher-pack PDF grid printouts only after the Sociobot billing product is registered; monetization is free in the current brief, so no payment integration is included.
+- Test the pass/ticket handoff with a classroom’s approved transfer channel and physical iPad accessibility tools.
+- If an approved first-party, privacy-reviewed service is introduced, add opt-in remote live gallery sync while retaining the current local pass/ticket mode.

@@ -135,17 +135,17 @@ dialog { width: min(820px, calc(100vw - 28px)); max-height: min(88vh, 900px); pa
 dialog::backdrop { background: rgba(3,5,16,.78); backdrop-filter: blur(5px); }
 .dialog-header { position: sticky; z-index: 3; top: 0; display: flex; align-items: start; justify-content: space-between; padding: 24px 28px 16px; background: var(--stall); border-bottom: 1px solid var(--line); }
 .dialog-header h2 { margin: 0; font-size: 2.25rem; }
-#gallery-start, #gallery-board { padding: 28px; }
+#gallery-start, #gallery-board, #gallery-student { padding: 28px; }
 #gallery-start > p { color: var(--muted); }
-.join-row { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
-.join-row label, details label { display: block; margin-bottom: 6px; color: var(--muted); font-size: .82rem; font-weight: 800; }
-.join-row > div, .submit-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.join-row input { width: 180px; text-transform: uppercase; letter-spacing: .12em; }
+details label { display: block; margin-bottom: 6px; color: var(--muted); font-size: .82rem; font-weight: 800; }
+.submit-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .code-ticket { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 17px; color: var(--ink); background: var(--mango); border-radius: 7px 12px 7px 10px; }
 .code-ticket span { font-size: .8rem; font-weight: 800; text-transform: uppercase; }
-.code-ticket strong { margin-right: auto; font: 800 1.75rem/1 var(--display); letter-spacing: .15em; }
+.code-ticket strong { margin-right: auto; font: 800 1.3rem/1.15 var(--display); }
 .code-ticket .quiet { color: var(--ink); border-color: rgba(9,13,34,.45); }
 .privacy-note { margin: 14px 0 24px; color: var(--muted); font-size: .82rem; }
+.student-pass-title { color: var(--paper); font-size: 1.05rem; }
+.pass-steps { display: grid; gap: 10px; margin: 0 0 24px; padding: 16px 16px 16px 36px; color: var(--muted); background: #0b112b; border-left: 4px solid var(--mint); border-radius: 4px 10px 10px 4px; font-size: .9rem; }
 details { padding: 18px 0; border-top: 1px solid var(--line); }
 details summary { min-height: 44px; font-weight: 800; cursor: pointer; }
 .submit-row input { flex: 1 1 180px; }
@@ -206,7 +206,7 @@ details summary { min-height: 44px; font-weight: 800; cursor: pointer; }
   footer { grid-template-columns: 1fr; padding: 40px 20px; }
   footer nav { gap: 20px; }
   .credit { grid-column: auto; }
-  #gallery-start, #gallery-board { padding: 20px 16px; }
+  #gallery-start, #gallery-board, #gallery-student { padding: 20px 16px; }
   .dialog-header { padding: 20px 16px 14px; }
   .gallery-list article { align-items: flex-start; flex-direction: column; }
   .gallery-list article > div:last-child { width: 100%; }

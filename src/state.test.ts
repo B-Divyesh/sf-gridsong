@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blankSong, decode, encode, entryFromTicket, entryTicket, noteMidi, resizeSong, sanitizeSong, songFromHash, songHash } from './state';
+import { blankSong, decode, encode, entryFromTicket, entryTicket, galleryHash, galleryInviteFromHash, galleryPass, gridCapacity, noteMidi, resizeSong, sanitizeSong, songFromHash, songHash } from './state';
 
 describe('song state', () => {
   it('round-trips unicode state through a URL hash', () => {
@@ -22,9 +22,27 @@ describe('song state', () => {
     expect(noteMidi(song, 0)).toBeGreaterThan(noteMidi(song, 1));
   });
 
-  it('round-trips gallery tickets', () => {
-    const entry = { id: 'one', nickname: 'Rae', createdAt: 1, song: blankSong() };
-    expect(entryFromTicket(entryTicket(entry))).toEqual(entry);
+  it('round-trips gallery tickets addressed to a portable class pass', () => {
+    const entry = { id: '12345678-1234-4234-9234-123456789abd', nickname: 'Rae', createdAt: 1, song: blankSong() };
+    const galleryId = '12345678-1234-4234-9234-123456789abc';
+    expect(entryFromTicket(entryTicket(entry, galleryId))).toEqual({ galleryId, entry });
+  });
+
+  it('opens the same class pass from a self-contained URL hash', () => {
+    const galleryId = '12345678-1234-4234-9234-123456789abc';
+    const pass = galleryPass(galleryId, Date.now());
+    expect(galleryInviteFromHash(galleryHash(pass))).toMatchObject({ galleryId });
+  });
+
+  it('round-trips every valid note in the 64-bar four-octave grid', () => {
+    const song = { ...blankSong(), bars: 64, octaves: 4, scale: 'chromatic' as const, notes: [] as ReturnType<typeof blankSong>['notes'] };
+    for (let row = 0; row < 50; row++) {
+      for (let step = 0; step < 1024; step++) song.notes.push({ row, step, voice: row === 48 ? 'kick' : row === 49 ? 'clap' : 'lantern' });
+    }
+    expect(song.notes).toHaveLength(gridCapacity(song));
+    const hash = songHash(song);
+    expect(hash.length).toBeLessThan(30_000);
+    expect(songFromHash(hash)).toEqual(song);
   });
 
   it('round-trips generic encoded values', () => {
