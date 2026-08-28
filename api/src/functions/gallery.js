@@ -169,3 +169,10 @@ app.http('gallery-delete', {
     } catch { return fail(503, 'The song could not be removed. Please try again.'); }
   }
 });
+
+// Let the API, rather than the Static Web Apps proxy, own unmatched /api paths
+// so every API failure has the same private JSON response policy.
+app.http('gallery-not-found', {
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], route: '{*path}', authLevel: 'anonymous',
+  handler: async () => fail(404, 'That gallery path was not found.')
+});

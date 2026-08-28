@@ -22,4 +22,12 @@ const headers = {
 for (const [name, expected] of Object.entries(headers)) {
   if (response.headers.get(name) !== expected) throw new Error(`Gallery API smoke check failed: ${name} is missing or incorrect.`);
 }
+const missing = await fetch(new URL('/api/nope', origin));
+const missingPayload = await missing.json().catch(() => ({}));
+if (missing.status !== 404 || typeof missingPayload.error !== 'string') {
+  throw new Error(`Gallery API smoke check failed: expected JSON 404 for an unknown API path, received ${missing.status}.`);
+}
+for (const [name, expected] of Object.entries({ 'cache-control': 'no-store', ...headers })) {
+  if (missing.headers.get(name) !== expected) throw new Error(`Unknown API response must include ${name}.`);
+}
 console.log(`Gallery API is live at ${origin} (malformed request correctly returned 400).`);

@@ -52,6 +52,8 @@ test('managed Static Web Apps API uses HTTP-only expiry cleanup', async () => {
   assert.doesNotMatch(source, /app\.timer\(/);
   assert.match(source, /request\.params\.id/);
   assert.doesNotMatch(source, /context\.bindingData/);
+  assert.match(source, /app\.http\('gallery-not-found'/);
+  assert.match(source, /route: '\{\*path\}'/);
 });
 
 test('the managed Functions entry is an explicit CommonJS bootstrap', async () => {
