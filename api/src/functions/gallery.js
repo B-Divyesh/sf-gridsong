@@ -1,7 +1,7 @@
-import { app } from '@azure/functions';
-import { TableClient } from '@azure/data-tables';
-import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
-import { expiredFilter, validNickname, validSong } from '../validation.js';
+const { app } = require('@azure/functions');
+const { TableClient } = require('@azure/data-tables');
+const { createHash, randomBytes, randomUUID, timingSafeEqual } = require('node:crypto');
+const { expiredFilter, validNickname, validSong } = require('../validation.js');
 
 const TABLE = 'gridsonggalleries';
 const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;

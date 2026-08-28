@@ -1,11 +1,11 @@
 const MAX_SONG_BYTES = 30_000;
 
 // Azure Table compares JavaScript epoch milliseconds as Edm.Int64 values.
-export function expiredFilter(timestamp) {
+function expiredFilter(timestamp) {
   return `expiresAt le ${Math.trunc(timestamp)}L`;
 }
 
-export function validNickname(value) {
+function validNickname(value) {
   if (typeof value !== 'string') return null;
   const name = value.trim().replace(/\s+/g, ' ');
   if (name.length < 1 || name.length > 24 || /[\u0000-\u001f\u007f]/.test(name)) return null;
@@ -13,7 +13,7 @@ export function validNickname(value) {
 }
 
 // Validate the compact GS2S payload without retaining any extra request fields.
-export function validSong(value) {
+function validSong(value) {
   if (typeof value !== 'string' || value.length > MAX_SONG_BYTES || !/^GS2S\.[A-Za-z0-9_-]+$/.test(value)) return false;
   try {
     const bytes = Buffer.from(value.slice(5), 'base64url');
@@ -35,3 +35,5 @@ export function validSong(value) {
     return true;
   } catch { return false; }
 }
+
+module.exports = { expiredFilter, validNickname, validSong };
