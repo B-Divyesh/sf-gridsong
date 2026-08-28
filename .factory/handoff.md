@@ -1,7 +1,8 @@
 # Gridsong repair handoff — PASS
 
 **Work order:** `gridsong-repair-4`
-**Repair commit:** `ec746ae` (`fix: make managed gallery function boot reliably`)
+**Function repair:** `ec746ae` (`fix: make managed gallery function boot reliably`)
+**Final deployed main:** `25771a5` (preserves the repaired gallery route precedence)
 **Production:** <https://gridsong.sociobot.in>
 
 ## Outcome
