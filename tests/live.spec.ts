@@ -26,4 +26,7 @@ test('deployed site sends a student song to the live teacher gallery', async ({ 
     await studentContext.close();
   }
   await expect(page.getByText(/by QA Blue Fox/)).toBeVisible({ timeout: 10_000 });
+  page.once('dialog', dialog => void dialog.accept());
+  await page.getByRole('button', { name: 'Remove' }).click();
+  await expect(page.getByText('0 songs', { exact: true })).toBeVisible();
 });
