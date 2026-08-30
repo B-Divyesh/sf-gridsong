@@ -3,6 +3,7 @@ const { readFile } = require('node:fs/promises');
 const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const { MAX_SUBMISSIONS, reserveSubmissionSlot, slotNumber } = require('../src/capacity.js');
 const { expiredFilter, validNickname, validSong } = require('../src/validation.js');
 const root = join(__dirname, '..', '..');
 
@@ -32,6 +33,57 @@ test('writes expiry filters as Azure Table Int64 literals', () => {
   assert.equal(expiredFilter(1_787_869_704_215.9), 'expiresAt le 1787869704215L');
 });
 
+test('atomically admits at most 120 concurrent gallery submissions', async () => {
+  const rows = new Map();
+  const client = {
+    async createEntity(entity) {
+      await Promise.resolve();
+      if (rows.has(entity.rowKey)) {
+        const error = new Error('An entity already exists in this slot.');
+        error.statusCode = 409;
+        throw error;
+      }
+      rows.set(entity.rowKey, entity);
+    },
+    async *listEntities() { yield* rows.values(); }
+  };
+  const gallery = { partitionKey: 'gallery-qa', expiresAt: Date.now() + 60_000 };
+  const outcomes = await Promise.all(Array.from({ length: MAX_SUBMISSIONS + 1 }, (_, index) => reserveSubmissionSlot(client, gallery, {
+    nickname: `QA ${index}`,
+    song: compactSong(),
+    createdAt: Date.now()
+  })));
+
+  assert.equal(outcomes.filter(Boolean).length, MAX_SUBMISSIONS);
+  assert.equal(outcomes.filter(value => !value).length, 1);
+  assert.equal(rows.size, MAX_SUBMISSIONS);
+  assert.deepEqual([...rows.keys()].map(slotNumber).sort((left, right) => left - right), Array.from({ length: MAX_SUBMISSIONS }, (_, index) => index));
+});
+
+test('fixed slots preserve the 120-song bound for legacy UUID submissions', async () => {
+  const rows = new Map(Array.from({ length: 119 }, (_, index) => [`00000000-0000-4000-8000-${String(index).padStart(12, '0')}`, { kind: 'submission' }]));
+  const client = {
+    async createEntity(entity) {
+      if (rows.has(entity.rowKey)) {
+        const error = new Error('An entity already exists in this slot.');
+        error.statusCode = 409;
+        throw error;
+      }
+      rows.set(entity.rowKey, entity);
+    },
+    async *listEntities() {
+      for (const [rowKey, value] of rows) yield { rowKey, ...value };
+    }
+  };
+  const gallery = { partitionKey: 'gallery-legacy', expiresAt: Date.now() + 60_000 };
+  const first = await reserveSubmissionSlot(client, gallery, { nickname: 'QA first', song: compactSong(), createdAt: Date.now() });
+  const second = await reserveSubmissionSlot(client, gallery, { nickname: 'QA second', song: compactSong(), createdAt: Date.now() });
+
+  assert.equal(first, true);
+  assert.equal(second, false);
+  assert.equal(rows.size, MAX_SUBMISSIONS);
+});
+
 test('production deployment contract ships the Function API with the static app', async () => {
   const deployment = JSON.parse(await readFile(join(root, 'swa-cli.config.json'), 'utf8'));
   const staticConfig = JSON.parse(await readFile(join(root, 'public/staticwebapp.config.json'), 'utf8'));
@@ -52,6 +104,13 @@ test('managed Static Web Apps API uses HTTP-only expiry cleanup', async () => {
   assert.doesNotMatch(source, /app\.timer\(/);
   assert.match(source, /request\.params\.id/);
   assert.doesNotMatch(source, /context\.bindingData/);
+});
+
+test('gallery admission does not trust a caller supplied forwarding header', async () => {
+  const source = await readFile(join(__dirname, '..', 'src', 'functions', 'gallery.js'), 'utf8');
+  assert.doesNotMatch(source, /x-forwarded-for/i);
+  assert.doesNotMatch(source, /rateLimit\(/);
+  assert.match(source, /reserveSubmissionSlot/);
 });
 
 test('the managed Functions entry is an explicit CommonJS bootstrap', async () => {

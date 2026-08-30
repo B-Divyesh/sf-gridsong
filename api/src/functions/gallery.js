@@ -2,13 +2,12 @@ const { app } = require('@azure/functions');
 const { TableClient } = require('@azure/data-tables');
 const { createHash, randomBytes, randomUUID, timingSafeEqual } = require('node:crypto');
 const { expiredFilter, validNickname, validSong } = require('../validation.js');
+const { isSubmissionRowKey, reserveSubmissionSlot } = require('../capacity.js');
 
 const TABLE = 'gridsonggalleries';
 const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
 const MAX_BODY = 36_000;
-const MAX_SUBMISSIONS = 120;
 const CLEANUP_LIMIT = 500;
-const buckets = new Map(); // Short-lived, in-process abuse guard; no identity is persisted.
 let tablePromise;
 
 function json(status, body) {
@@ -51,17 +50,6 @@ async function table() {
       }).then(() => client);
   }
   return tablePromise;
-}
-
-function rateLimit(request, limit = 20) {
-  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
-  const key = createHash('sha256').update(forwarded).digest('hex').slice(0, 16);
-  const point = buckets.get(key) || { count: 0, started: now() };
-  if (now() - point.started > 60_000) { point.count = 0; point.started = now(); }
-  point.count++;
-  buckets.set(key, point);
-  if (buckets.size > 2_000) buckets.clear();
-  return point.count <= limit;
 }
 
 async function body(request) {
@@ -110,7 +98,6 @@ async function cleanExpired(client) {
 app.http('galleries', {
   methods: ['POST'], route: 'galleries', authLevel: 'anonymous',
   handler: async request => {
-    if (!rateLimit(request, 5)) return fail(429, 'That is a lot of new boards at once. Wait a minute, then try again.');
     try {
       await body(request); // Enforce a tiny, known request shape even though no fields are accepted.
       const client = await table();
@@ -125,7 +112,6 @@ app.http('galleries', {
 app.http('gallery-read', {
   methods: ['GET'], route: 'galleries/{id}', authLevel: 'anonymous',
   handler: async request => {
-    if (!rateLimit(request, 60)) return fail(429, 'Please wait a minute, then try the gallery again.');
     try {
       const client = await table();
       const result = await activeGallery(client, request.params.id);
@@ -139,7 +125,6 @@ app.http('gallery-read', {
 app.http('gallery-submit', {
   methods: ['POST'], route: 'galleries/{id}/submissions', authLevel: 'anonymous',
   handler: async request => {
-    if (!rateLimit(request, 20)) return fail(429, 'That is a lot of tries at once. Wait a minute, then try again.');
     try {
       const data = await body(request), nickname = validNickname(data.nickname);
       if (!nickname || !validSong(data.song) || !sameToken(data.submitKey, (await galleryFor(await table(), request.params.id))?.studentKeyHash)) return fail(400, 'Use a short nickname and a song made in Gridsong, then try again.');
@@ -147,10 +132,8 @@ app.http('gallery-submit', {
       const result = await activeGallery(client, request.params.id);
       if (result.response) return result.response;
       if (!sameToken(data.submitKey, result.gallery.studentKeyHash)) return fail(404, 'That class gallery was not found. Ask your teacher for a new pass.');
-      let count = 0;
-      for await (const _entry of client.listEntities({ queryOptions: { filter: `PartitionKey eq '${result.gallery.partitionKey}' and kind eq 'submission'` } })) { count++; if (count >= MAX_SUBMISSIONS) return fail(429, 'This class gallery is full. Ask your teacher to make a new board.'); }
-      const createdAt = now();
-      await client.createEntity({ partitionKey: result.gallery.partitionKey, rowKey: randomUUID(), kind: 'submission', nickname, song: data.song, createdAt, expiresAt: result.gallery.expiresAt });
+      const reserved = await reserveSubmissionSlot(client, result.gallery, { nickname, song: data.song, createdAt: now() });
+      if (!reserved) return fail(429, 'This class gallery is full. Ask your teacher to make a new board.');
       return json(201, { ok: true });
     } catch (error) { return fail(error.status || 503, error.status ? error.message : 'The song could not be sent.'); }
   }
@@ -163,7 +146,7 @@ app.http('gallery-delete', {
       const client = await table(), result = await activeGallery(client, request.params.id);
       if (result.response) return result.response;
       if (!sameToken(request.headers.get('x-gridsong-teacher-key'), result.gallery.teacherKeyHash)) return fail(404, 'That class gallery was not found.');
-      if (!/^[a-f0-9-]{36}$/i.test(request.params.entryId)) return fail(400, 'That song could not be removed.');
+      if (!isSubmissionRowKey(request.params.entryId)) return fail(400, 'That song could not be removed.');
       await client.deleteEntity(result.gallery.partitionKey, request.params.entryId).catch(error => { if (error.statusCode !== 404) throw error; });
       return json(200, { ok: true });
     } catch { return fail(503, 'The song could not be removed. Please try again.'); }

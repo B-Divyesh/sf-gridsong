@@ -18,7 +18,7 @@ Live: <https://gridsong.sociobot.in>
 
 The teacher creates a board on the projector/device and copies its **student class pass**. The pass is a self-contained URL that works on any student device. It carries an unguessable, submit-only capability: it cannot read the board. A student opens it, composes, enters a short classroom nickname, and presses **Send to class gallery**. The projector checks for new submissions every five seconds while the board is open; no teacher ticket-pasting step is involved.
 
-The teacher key is a separate unguessable capability held only in the teacher browser’s local storage. The gallery service stores only nickname, compact song data, timestamps, and hashed capabilities. It enforces small requests, nickname/song validation, request limits, a 120-song gallery limit, and 90-day expiration. The API rejects expired boards immediately and removes expired records in bounded batches whenever a teacher creates a new board.
+The teacher key is a separate unguessable capability held only in the teacher browser’s local storage. The gallery service stores only nickname, compact song data, timestamps, and hashed capabilities. It enforces small requests, nickname/song validation, a storage-enforced 120-song gallery limit, and 90-day expiration. The API rejects expired boards immediately and removes expired records in bounded batches whenever a teacher creates a new board.
 
 ## Develop
 
@@ -39,7 +39,7 @@ npm run test:api  # API validation + deployment-contract tests
 npm run test:e2e  # Chromium desktop + 390px mobile, including axe
 npm run build     # reproducible production output in dist/
 npm run preview   # serve dist locally
-npm run test:live # live Function smoke + gallery create/submit/read/delete
+npm run test:live # live Function smoke + gallery flow + atomic 120-song capacity
 ```
 
 The deployment artifact is `dist/`, with `dist/index.html` at its root. `swa-cli.config.json` is the production deployment contract: it deploys `dist/` and the `api/` HTTP Function together to the Standard `sf-gridsong` Static Web App. Provision the `gridsonggalleries` Azure Table first, then set `GALLERY_STORAGE_CONNECTION` to an HTTPS-only table-scoped SAS connection string with read/add/update/delete access for that table. No value is committed in this repository. After a deployment, run `node scripts/live-api-smoke.mjs` to make sure the live Function, rather than the static fallback, answers `/api/galleries`. `public/staticwebapp.config.json` contains Azure Static Web Apps routes, headers, cache policy, and the Node API runtime.
