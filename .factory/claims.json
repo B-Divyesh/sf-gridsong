@@ -1,0 +1,72 @@
+[
+  {
+    "id": "demo-sandbox",
+    "claim": "Try the four-bar sample without saving it to your real songs.",
+    "where": "landing action, demo banner, README",
+    "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
+    "sandbox": "fresh browser context; create a real local song, enter /demo, edit and reset the sample; assert only demo:gridsong.song.v1 changes"
+  },
+  {
+    "id": "local-save",
+    "claim": "Songs save on this device.",
+    "where": "landing facts, composer save state, README",
+    "test": "npm run test:e2e -- --grep @claim:local-save",
+    "sandbox": "fresh /demo context; toggle a note, reload, and assert the demo song restores while the real key stays absent"
+  },
+  {
+    "id": "browser-exports",
+    "claim": "Exports WAV and MIDI in your browser.",
+    "where": "landing facts, export controls, README",
+    "test": "npm run test:e2e -- --grep @claim:browser-exports",
+    "sandbox": "fresh /demo context with the shipped sample; assert both downloadable file types"
+  },
+  {
+    "id": "complete-song-links",
+    "claim": "Copied song links contain the whole song.",
+    "where": "copy-link status, README",
+    "test": "npm run test:e2e -- --grep @claim:complete-song-links",
+    "sandbox": "fresh /demo context; copy the shipped sample link, open it in a new page, and assert its title and all 48 active notes"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "Works offline after the first visit.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:offline-reload",
+    "sandbox": "dedicated browser context; visit /demo, wait for its service worker, go offline, reload, and assert the demo grid remains usable"
+  },
+  {
+    "id": "privacy-local-demo",
+    "claim": "No account, ads, or tracking.",
+    "where": "landing facts, footer, README, privacy page",
+    "test": "npm run test:e2e -- --grep @claim:privacy-local-demo",
+    "sandbox": "fresh /demo context; record every request during composition and demo-gallery opening, assert same-origin only and no account fields"
+  },
+  {
+    "id": "gallery-direct-submit",
+    "claim": "Students can send a nickname and song directly to the teacher’s projector board.",
+    "where": "classroom section, class-gallery dialog, README",
+    "test": "npm run test:e2e -- --grep @claim:gallery-direct-submit",
+    "sandbox": "two fresh browser contexts and a same-origin gallery service fixture; assert pass → direct submit → teacher poll with no ticket pasting"
+  },
+  {
+    "id": "gallery-retention",
+    "claim": "Class boards close after 90 days.",
+    "where": "class-gallery dialog, README, privacy page, terms",
+    "test": "npm run test:api -- --test-name-pattern @claim:gallery-retention",
+    "sandbox": "API policy test asserts the exact 90-day retention duration used to create class boards"
+  },
+  {
+    "id": "gallery-capacity",
+    "claim": "A class board accepts up to 120 songs and tells clients when to retry.",
+    "where": "README",
+    "test": "npm run test:api -- --test-name-pattern @claim:gallery-capacity",
+    "sandbox": "API response test asserts the full-board 429 has a numeric Retry-After header; live capacity smoke repeats it against deployment"
+  },
+  {
+    "id": "mobile-390",
+    "claim": "The composer fits a 390px phone screen.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:mobile-390",
+    "sandbox": "390×844 browser project; assert no page-level horizontal overflow"
+  }
+]

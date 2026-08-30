@@ -44,6 +44,10 @@ for (let trial = 1; trial <= trials; trial++) {
     if (statuses[201] !== capacity || statuses[429] !== 1 || Object.keys(statuses).length !== 2) {
       throw new Error(`Trial ${trial}: expected ${capacity} accepted submissions and one full-gallery response; received ${JSON.stringify(statuses)}.`);
     }
+    const full = responses.find(response => response.status === 429);
+    if (!full?.headers.get('retry-after') || !/^\d+$/.test(full.headers.get('retry-after'))) {
+      throw new Error(`Trial ${trial}: full-gallery 429 must include a numeric Retry-After header.`);
+    }
     entries = (await readBoard(board)).entries;
     if (entries.length !== capacity) throw new Error(`Trial ${trial}: expected ${capacity} persisted submissions; found ${entries.length}.`);
   } finally {

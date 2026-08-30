@@ -1,12 +1,14 @@
 import './style.css';
 import { noteName, Player, renderWav, songDuration } from './audio';
+import { DEMO_GALLERY_KEY, DEMO_SONG_KEY, isDemoLocation, REAL_GALLERY_KEY, REAL_SONG_KEY, sampleSong } from './demo';
 import { createGallery, fetchGallery, GalleryApiError, removeGalleryEntry, submitToGallery, type TeacherGallery } from './gallery-api';
 import { midiBlob } from './midi';
 import { blankSong, galleryHash, galleryInviteFromHash, galleryPass, melodicRows, resizeSong, sanitizeSong, songFromHash, songHash, STEPS_PER_BAR } from './state';
 import type { GalleryEntry, GalleryInvite, Song, VoiceName } from './types';
 
-const SONG_KEY = 'gridsong.song.v1';
-const ACTIVE_GALLERY_KEY = 'gridsong.gallery.v3.active';
+const isDemo = isDemoLocation(location.pathname, location.search);
+const SONG_KEY = isDemo ? DEMO_SONG_KEY : REAL_SONG_KEY;
+const ACTIVE_GALLERY_KEY = isDemo ? DEMO_GALLERY_KEY : REAL_GALLERY_KEY;
 const player = new Player();
 let song = loadInitialSong();
 let currentBar = 0;
@@ -16,6 +18,11 @@ let classInvite: GalleryInvite | null = null;
 let playStep = -1;
 let galleryPoller = 0;
 
+if (isDemo) {
+  document.title = 'Demo — Gridsong';
+  document.body.classList.add('demo-mode');
+}
+
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="site-header">
     <a class="brand" href="/" aria-label="Gridsong home">
@@ -23,27 +30,34 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <span>Gridsong</span>
     </a>
     <nav aria-label="Primary">
+      <a href="/demo#composer">Try sample</a>
       <a href="#composer">Make music</a>
       <button class="nav-button" id="open-gallery" type="button">Class gallery</button>
+      <a href="/privacy/">Privacy</a>
     </nav>
   </header>
+  <div class="demo-banner" id="demo-banner" role="status" aria-live="polite" hidden>
+    <span><strong>Demo</strong> — sample data, nothing is saved</span>
+    <span class="demo-actions"><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span>
+  </div>
   <main>
     <section class="intro" aria-labelledby="page-title">
       <div class="intro-copy">
-        <p class="eyebrow">A little music stall for big ideas</p>
-        <h1 id="page-title">Make a song.<br><em>Keep the song.</em></h1>
-        <p>Tap in a tune, hear it right away, then save a link or take home a WAV or MIDI file. No account. No ads. No lost work.</p>
-        <a class="button primary" href="#composer">Start composing <span aria-hidden="true">↓</span></a>
+        <p class="eyebrow">Classroom step sequencer</p>
+        <h1 id="page-title">Make classroom songs together</h1>
+        <p>For K–8 music teachers and students who need a simple way to compose, save, share, and hear songs.</p>
+        <div class="intro-actions"><a class="button primary" href="/demo#composer">Try it with sample data</a><span>Opens a four-bar rhythm in a private demo.</span></div>
+        <ul class="plain-facts"><li>Saves songs on this device</li><li>Exports WAV or MIDI</li><li>No account, ads, or tracking</li></ul>
       </div>
       <figure class="hero-art">
         <img src="/assets/night-market-grid.webp" width="1200" height="800" alt="A handmade night-market music stall with a grid of glowing lantern notes" fetchpriority="high" decoding="async">
-        <figcaption>Every light is a note. Your browser is the instrument.</figcaption>
+        <figcaption>Tap a tile to add a note to your song.</figcaption>
       </figure>
     </section>
 
     <section class="composer" id="composer" aria-labelledby="composer-title">
       <div class="section-heading">
-        <div><p class="eyebrow">Your composition</p><h2 id="composer-title">Light up the grid</h2></div>
+        <div><p class="eyebrow">Your composition</p><h2 id="composer-title">Compose your song on the grid</h2></div>
         <div class="save-state" id="save-state" role="status" aria-live="polite"><span aria-hidden="true">●</span> Saved on this device</div>
       </div>
 
@@ -88,7 +102,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
       <div class="action-strip">
         <div>
-          <h3>Keep it</h3>
+          <h3>Save or export your song</h3>
           <p>Save a link or a file. All exports happen right here.</p>
         </div>
         <div class="action-buttons">
@@ -101,7 +115,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </section>
 
     <section class="classroom" aria-labelledby="classroom-title">
-      <div><p class="eyebrow">Made for the lesson loop</p><h2 id="classroom-title">From each desk to one projector</h2><p>Make a class board, share its student link, and let students send a nickname and song straight to the projector. No accounts or email addresses.</p><button class="button primary" id="open-gallery-bottom" type="button">Open class gallery</button></div>
+      <div><p class="eyebrow">Class gallery</p><h2 id="classroom-title">Collect songs for the class</h2><p>Make a class board, share its student link, and let students send a nickname and song straight to the projector. No accounts or email addresses.</p><button class="button primary" id="open-gallery-bottom" type="button">Open class gallery</button></div>
       <ol class="class-steps"><li><span>01</span><strong>Teacher shares a class link</strong><small>It opens on every student device.</small></li><li><span>02</span><strong>Students submit a song</strong><small>Nickname and song only.</small></li><li><span>03</span><strong>Projector collects</strong><small>Play and celebrate together.</small></li></ol>
     </section>
   </main>
@@ -121,6 +135,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <p>Create a 90-day board on the teacher device. You will get a shareable student class link; submissions arrive here automatically.</p>
       <button class="button primary" id="create-gallery" type="button">Create class board</button>
       <p class="privacy-note">The gallery keeps only nickname and song data for 90 days. There are no accounts, email addresses, or student gallery browsing.</p>
+    </div>
+    <div id="gallery-demo" hidden>
+      <p><strong>This sample stays on this device.</strong> Start for real to create a class board and invite students.</p>
+      <button class="button primary" id="start-real-gallery" type="button">Start for real</button>
     </div>
     <div id="gallery-board" hidden>
       <div class="code-ticket"><span>Student class pass</span><strong id="gallery-pass-status">Ready to share</strong><button class="button quiet" id="copy-pass" type="button">Copy student pass</button></div>
@@ -147,9 +165,9 @@ function loadInitialSong(): Song {
   }
   try {
     const local = localStorage.getItem(SONG_KEY);
-    return local ? sanitizeSong(JSON.parse(local)) : blankSong();
+    return local ? sanitizeSong(JSON.parse(local)) : isDemo ? sampleSong() : blankSong();
   } catch {
-    return blankSong();
+    return isDemo ? sampleSong() : blankSong();
   }
 }
 
@@ -184,7 +202,8 @@ function formatDuration(seconds: number): string {
 function saveLocal(message = 'Saved on this device'): void {
   try {
     localStorage.setItem(SONG_KEY, JSON.stringify(song));
-    get<HTMLElement>('save-state').innerHTML = `<span aria-hidden="true">●</span> ${message}`;
+    const label = isDemo && message === 'Saved on this device' ? 'Saved in this demo' : message;
+    get<HTMLElement>('save-state').innerHTML = `<span aria-hidden="true">●</span> ${label}`;
   } catch {
     get<HTMLElement>('save-state').textContent = 'Local save is unavailable — copy a link instead';
   }
@@ -366,6 +385,26 @@ get<HTMLButtonElement>('new-song').addEventListener('click', () => {
   titleInput.focus();
 });
 
+function startForReal(): void {
+  // Demo storage is deliberately left in its separate namespace. The real app
+  // never reads it, and a later demo visit can still be reset explicitly.
+  location.assign('/');
+}
+
+function resetDemo(): void {
+  if (!isDemo) return;
+  stopPlayback();
+  localStorage.removeItem(DEMO_SONG_KEY);
+  localStorage.removeItem(DEMO_GALLERY_KEY);
+  song = sampleSong();
+  currentBar = 0;
+  history.replaceState(null, '', `${location.pathname}${location.search}`);
+  syncControls();
+  commit('Demo sample reset');
+  showToast('Demo sample reset. Nothing was saved to your real songs.');
+  focusFirstNote();
+}
+
 function safeName(value: string): string {
   return value.trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'gridsong';
 }
@@ -423,6 +462,7 @@ async function restoreTeacherGallery(): Promise<void> {
 }
 
 function activateGalleryFromHash(): string | null {
+  if (isDemo) return null;
   try {
     const invite = galleryInviteFromHash(location.hash);
     classInvite = invite;
@@ -445,6 +485,7 @@ async function refreshGallery(silent = false): Promise<void> {
 
 async function openGallery(): Promise<void> {
   if (!galleryDialog.open) galleryDialog.showModal();
+  if (isDemo) { renderGallery(); return; }
   if (!classInvite && !activeGallery) await restoreTeacherGallery();
   renderGallery();
   if (activeGallery && !galleryPoller) galleryPoller = window.setInterval(() => void refreshGallery(true), 5000);
@@ -516,7 +557,10 @@ get<HTMLButtonElement>('submit-student-song').addEventListener('click', async ()
 function renderGallery(): void {
   const board = get<HTMLDivElement>('gallery-board');
   const student = get<HTMLDivElement>('gallery-student');
-  get<HTMLDivElement>('gallery-start').hidden = Boolean(activeGallery || classInvite);
+  const demo = get<HTMLDivElement>('gallery-demo');
+  demo.hidden = !isDemo;
+  get<HTMLDivElement>('gallery-start').hidden = isDemo || Boolean(activeGallery || classInvite);
+  if (isDemo) { board.hidden = true; student.hidden = true; return; }
   board.hidden = !activeGallery;
   student.hidden = !classInvite || Boolean(activeGallery);
   if (!activeGallery) return;
@@ -526,7 +570,7 @@ function renderGallery(): void {
   if (!activeGallery.entries.length) {
     const empty = document.createElement('div');
     empty.className = 'empty-gallery';
-    empty.innerHTML = '<span aria-hidden="true">♫</span><strong>The stage is quiet</strong><p>Share the student pass, then new songs will appear here.</p>';
+    empty.innerHTML = '<span aria-hidden="true">♫</span><strong>No songs submitted yet</strong><p>Share the student pass, then new songs will appear here.</p>';
     list.append(empty);
     return;
   }
@@ -580,9 +624,24 @@ syncControls();
 renderGrid();
 saveLocal();
 updateOnlineState();
+get<HTMLElement>('demo-banner').hidden = !isDemo;
+get<HTMLButtonElement>('reset-demo').addEventListener('click', resetDemo);
+get<HTMLButtonElement>('start-real').addEventListener('click', startForReal);
+get<HTMLButtonElement>('start-real-gallery').addEventListener('click', startForReal);
 const initialPassError = activateGalleryFromHash();
 if (initialPassError) queueMicrotask(() => showToast(initialPassError));
 if (classInvite) queueMicrotask(() => void openGallery());
+
+// The composer is rendered by this module after the browser has resolved an
+// incoming #composer anchor. Re-apply that anchor for the sample action so its
+// first post-click screen is the working, seeded sequencer rather than the
+// landing copy above it.
+if (isDemo && location.hash === '#composer') {
+  requestAnimationFrame(() => {
+    document.getElementById('composer')?.scrollIntoView({ block: 'start' });
+    window.scrollBy({ top: -100, behavior: 'auto' });
+  });
+}
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').then(registration => {

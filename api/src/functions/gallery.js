@@ -3,14 +3,14 @@ const { TableClient } = require('@azure/data-tables');
 const { createHash, randomBytes, randomUUID, timingSafeEqual } = require('node:crypto');
 const { expiredFilter, validNickname, validSong } = require('../validation.js');
 const { isSubmissionRowKey, reserveSubmissionSlot } = require('../capacity.js');
+const { FULL_GALLERY_RETRY_AFTER_SECONDS, GALLERY_RETENTION_MS } = require('../policy.js');
 
 const TABLE = 'gridsonggalleries';
-const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
 const MAX_BODY = 36_000;
 const CLEANUP_LIMIT = 500;
 let tablePromise;
 
-function json(status, body) {
+function json(status, body, extraHeaders = {}) {
   return {
     status,
     jsonBody: body,
@@ -19,11 +19,19 @@ function json(status, body) {
       'content-type': 'application/json; charset=utf-8',
       'x-content-type-options': 'nosniff',
       'referrer-policy': 'strict-origin-when-cross-origin',
-      'permissions-policy': 'camera=(), microphone=(), geolocation=()'
+      'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+      ...extraHeaders
     }
   };
 }
 function fail(status, error) { return json(status, { error }); }
+function fullGalleryResponse() {
+  return json(429, { error: 'This class gallery is full. Ask your teacher to make a new board.' }, {
+    // The gallery may have a song removed. A short recheck is more truthful
+    // than promising a retry will create capacity immediately.
+    'retry-after': String(FULL_GALLERY_RETRY_AFTER_SECONDS)
+  });
+}
 function now() { return Date.now(); }
 function token() { return randomBytes(32).toString('base64url'); }
 function tokenHash(value) { return createHash('sha256').update(value).digest('base64url'); }
@@ -102,7 +110,7 @@ app.http('galleries', {
       await body(request); // Enforce a tiny, known request shape even though no fields are accepted.
       const client = await table();
       await cleanExpired(client);
-      const id = randomUUID(), teacherKey = token(), studentKey = token(), createdAt = now(), expiresAt = createdAt + NINETY_DAYS;
+      const id = randomUUID(), teacherKey = token(), studentKey = token(), createdAt = now(), expiresAt = createdAt + GALLERY_RETENTION_MS;
       await client.createEntity({ partitionKey: id, rowKey: 'gallery', kind: 'gallery', createdAt, expiresAt, teacherKeyHash: tokenHash(teacherKey), studentKeyHash: tokenHash(studentKey) });
       return json(201, { id, createdAt, expiresAt, entries: [], teacherKey, studentKey });
     } catch (error) { return fail(error.status || 503, error.status ? error.message : 'The class board could not be created.'); }
@@ -133,11 +141,13 @@ app.http('gallery-submit', {
       if (result.response) return result.response;
       if (!sameToken(data.submitKey, result.gallery.studentKeyHash)) return fail(404, 'That class gallery was not found. Ask your teacher for a new pass.');
       const reserved = await reserveSubmissionSlot(client, result.gallery, { nickname, song: data.song, createdAt: now() });
-      if (!reserved) return fail(429, 'This class gallery is full. Ask your teacher to make a new board.');
+      if (!reserved) return fullGalleryResponse();
       return json(201, { ok: true });
     } catch (error) { return fail(error.status || 503, error.status ? error.message : 'The song could not be sent.'); }
   }
 });
+
+module.exports = { fullGalleryResponse, json };
 
 app.http('gallery-delete', {
   methods: ['DELETE'], route: 'galleries/{id}/submissions/{entryId}', authLevel: 'anonymous',

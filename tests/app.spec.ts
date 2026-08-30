@@ -14,38 +14,86 @@ test('loads without console errors and passes accessibility scan', async ({ page
   expect(errors).toEqual([]);
 });
 
-test('creates and locally restores a note', async ({ page }) => {
+test('puts the teacher audience and sample action on the cold first screen', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make classroom songs together');
+  await expect(page.getByText(/For K–8 music teachers and students/)).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo#composer');
+});
+
+test('@claim:demo-sandbox keeps the sample out of real-song storage and can reset it', async ({ page }) => {
   await page.goto('/');
   const first = page.locator('.note-cell').first();
+  await first.click();
+  const realSong = await page.evaluate(() => localStorage.getItem('gridsong.song.v1'));
+
+  await page.goto('/demo#composer');
+  await expect(page).toHaveTitle('Demo — Gridsong');
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.getElementById('composer')!.getBoundingClientRect().top < 120)).toBe(true);
+  await expect(page.locator('.note-cell.active')).toHaveCount(12);
+  await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
+  expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
+  expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.song.v1'))).not.toBeNull();
+
+  await page.locator('.note-cell').first().click();
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
+  await expect(page.locator('.note-cell.active')).toHaveCount(12);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('demo:gridsong.song.v1') ?? '{}').notes?.length)).toBe(48);
+  expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
+
+  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await expect(page.getByText('This sample stays on this device.')).toBeVisible();
+});
+
+test('@claim:local-save creates and restores a demo song without touching real storage', async ({ page }) => {
+  await page.goto('/demo#composer');
+  const first = page.locator('.note-cell').first();
+  const before = await first.getAttribute('aria-pressed');
   await first.click();
   await expect(first).toHaveAttribute('aria-pressed', 'true');
   await page.reload();
   await expect(page.locator('.note-cell').first()).toHaveAttribute('aria-pressed', 'true');
+  expect(before).toBe('false');
+  expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBeNull();
 });
 
-test('supports keyboard grid editing and MIDI download', async ({ page }) => {
-  await page.goto('/');
+test('@claim:browser-exports supports keyboard grid editing and browser MIDI/WAV downloads', async ({ page }) => {
+  await page.goto('/demo#composer');
   const first = page.locator('.note-cell').first();
   await first.focus();
   await page.keyboard.press('Space');
-  await expect(first).toHaveAttribute('aria-pressed', 'true');
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('.note-cell').nth(1)).toBeFocused();
-  const download = page.waitForEvent('download');
+  const midi = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export MIDI' }).click();
-  await expect((await download).suggestedFilename()).toMatch(/\.mid$/);
-});
-
-test('renders a WAV entirely in the browser', async ({ page }) => {
-  await page.goto('/');
-  await page.locator('.note-cell').first().click();
-  const download = page.waitForEvent('download');
+  await expect((await midi).suggestedFilename()).toMatch(/\.mid$/);
+  const wav = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export WAV' }).click();
-  await expect((await download).suggestedFilename()).toMatch(/\.wav$/);
+  await expect((await wav).suggestedFilename()).toMatch(/\.wav$/);
   await expect(page.getByText('WAV exported.')).toBeVisible();
 });
 
-test('student submits directly to the teacher gallery across separate devices', async ({ page, browser }) => {
+test('@claim:complete-song-links opens the complete sample song from a copied demo link', async ({ browser }) => {
+  const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+  const page = await context.newPage();
+  try {
+    await page.goto('/demo#composer');
+    await page.getByRole('button', { name: 'Copy song link' }).click();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toContain('/demo#song=GS2S.');
+    const opened = await context.newPage();
+    await opened.goto(copied);
+    await expect(opened.getByLabel('Song title')).toHaveValue('Morning call and response');
+    await expect(opened.locator('.note-cell.active')).toHaveCount(12);
+    expect(await opened.evaluate(() => JSON.parse(localStorage.getItem('demo:gridsong.song.v1') ?? '{}').notes?.length)).toBe(48);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:gallery-direct-submit student submits directly to the teacher gallery across separate devices', async ({ page, browser }) => {
   const galleries = new Map<string, { id: string; createdAt: number; expiresAt: number; teacherKey: string; studentKey: string; entries: Array<{ id: string; nickname: string; createdAt: number; song: string }> }>();
   let expired = false;
   const installGalleryApi = async (context: BrowserContext) => {
@@ -109,21 +157,49 @@ test('student submits directly to the teacher gallery across separate devices', 
   await expect(page.getByText('This class gallery has closed.')).toBeVisible();
 });
 
-test('opens the cached composer shell while offline', async ({ page }) => {
-  await page.goto('/');
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await page.reload();
-  await page.context().setOffline(true);
+test('@claim:offline-reload opens the cached demo composer shell while offline', async ({ browser }) => {
+  // This must own its context: closing/reusing the shared context would make
+  // later browser tests fail and would not prove a clean offline reload.
+  const context = await browser.newContext();
+  const page = await context.newPage();
   try {
+    await page.goto('/demo#composer');
+    await page.evaluate(() => navigator.serviceWorker.ready);
     await page.reload();
-    await expect(page).toHaveTitle(/Gridsong/);
+    await expect.poll(() => page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.getRegistration();
+      await registration?.update();
+      return Boolean(registration?.active && !registration.waiting);
+    })).toBe(true);
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page).toHaveTitle('Demo — Gridsong');
     await expect(page.locator('.note-cell')).toHaveCount(256);
+    await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   } finally {
-    await page.context().setOffline(false);
+    await context.setOffline(false);
+    await context.close();
   }
 });
 
-test('keeps the page frame within a 390px viewport', async ({ page }, testInfo) => {
+test('@claim:privacy-local-demo makes no third-party requests or account prompts', async ({ browser, baseURL }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const requests: string[] = [];
+  page.on('request', request => requests.push(request.url()));
+  try {
+    await page.goto('/demo#composer');
+    await page.locator('.note-cell').first().click();
+    await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+    const origin = new URL(baseURL!).origin;
+    expect(requests.every(url => new URL(url).origin === origin)).toBe(true);
+    await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:mobile-390 keeps the page frame within a 390px viewport', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile');
   await page.goto('/');
   const widths = await page.evaluate(() => ({ body: document.body.scrollWidth, viewport: innerWidth }));

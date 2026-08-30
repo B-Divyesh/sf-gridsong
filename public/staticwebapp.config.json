@@ -9,6 +9,7 @@
   },
   "routes": [
     { "route": "/assets/*", "headers": { "Cache-Control": "public, max-age=31536000, immutable" } },
+    { "route": "/sw.js", "headers": { "Cache-Control": "no-cache" } },
     { "route": "/*.js", "headers": { "Cache-Control": "public, max-age=31536000, immutable" } },
     { "route": "/*.css", "headers": { "Cache-Control": "public, max-age=31536000, immutable" } }
   ]

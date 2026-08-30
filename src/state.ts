@@ -164,7 +164,12 @@ export function songFromHash(hash: string): Song | null {
 }
 
 export function songHash(song: Song, existingHash = ''): string {
-  const params = new URLSearchParams(existingHash.replace(/^#/, ''));
+  // Keep a student class pass when sharing from that flow, but do not turn an
+  // in-page anchor such as #composer into meaningless URL state.
+  const existing = new URLSearchParams(existingHash.replace(/^#/, ''));
+  const params = new URLSearchParams();
+  const gallery = existing.get('gallery');
+  if (gallery) params.set('gallery', gallery);
   params.set('song', encodeSong(song));
   return `#${params.toString()}`;
 }

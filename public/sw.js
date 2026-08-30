@@ -1,4 +1,4 @@
-const CACHE = 'gridsong-shell-v4';
+const CACHE = 'gridsong-shell-v5';
 const SHELL = ['/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/privacy/', '/terms/'];
 
 async function cacheShell() {

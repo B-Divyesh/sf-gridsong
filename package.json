@@ -8,13 +8,13 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "test:api": "npm --prefix api test",
+    "test:api": "npm --prefix api run test --",
     "test:e2e": "playwright test",
     "test:live": "node scripts/live-api-smoke.mjs && node scripts/live-gallery-flow.mjs && node scripts/live-gallery-capacity.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "1.58.2",
     "typescript": "^5.9.2",
     "vite": "^7.1.3",
     "vitest": "^3.2.4"

@@ -7,6 +7,10 @@ describe('song state', () => {
     expect(songFromHash(songHash(song))).toEqual(song);
   });
 
+  it('does not preserve an in-page composer anchor in a copied song link', () => {
+    expect(songHash(blankSong(), '#composer')).toMatch(/^#song=GS2S\./);
+  });
+
   it('clamps untrusted values and rejects invalid versions', () => {
     expect(sanitizeSong({ ...blankSong(), tempo: 900 }).tempo).toBe(200);
     expect(() => sanitizeSong({ v: 99 })).toThrow(/unsupported/);

@@ -40,6 +40,10 @@ a:hover { color: var(--paper); }
 .site-header nav a, .nav-button { color: var(--muted); font-weight: 700; text-decoration: none; }
 .nav-button { min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; }
 .site-header nav a:hover, .nav-button:hover { color: var(--paper); }
+.demo-banner { position: sticky; z-index: 140; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1440px; margin: 0 auto; padding: 9px clamp(20px, 5vw, 72px); color: var(--ink); background: var(--mint); box-shadow: 0 4px 0 rgba(9,13,34,.22); font-size: .88rem; font-weight: 750; }
+.demo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.text-button { min-height: 32px; padding: 4px 8px; color: var(--ink); background: transparent; border: 1px solid rgba(9,13,34,.5); border-radius: 5px; font-weight: 800; cursor: pointer; }
+.text-button:hover { background: rgba(255,247,222,.55); }
 
 main { overflow: clip; }
 .intro { position: relative; display: grid; grid-template-columns: minmax(0, .86fr) minmax(420px, 1.14fr); align-items: center; gap: clamp(32px, 6vw, 96px); max-width: 1440px; min-height: 650px; margin: 0 auto; padding: 56px clamp(20px, 5vw, 72px) 112px; }
@@ -50,6 +54,10 @@ h1, h2 { font-family: var(--display); letter-spacing: -.035em; }
 h1 { max-width: 720px; margin-bottom: 24px; font-size: clamp(3rem, 7vw, 6.5rem); line-height: .92; }
 h1 em { color: var(--mango); font-style: normal; }
 .intro-copy > p:not(.eyebrow) { max-width: 580px; margin-bottom: 32px; color: var(--muted); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.6; }
+.intro-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 20px; }
+.intro-actions > span { max-width: 250px; color: var(--muted); font-size: .9rem; font-weight: 700; }
+.plain-facts { display: grid; gap: 5px; max-width: 360px; margin: 0; padding: 0; color: var(--paper); list-style: none; font-size: .9rem; font-weight: 700; }
+.plain-facts li::before { margin-right: 8px; color: var(--mint); content: '✓'; }
 .hero-art { position: relative; margin: 0; transform: rotate(1.2deg); }
 .hero-art::before { content: ""; position: absolute; inset: -12px 18px 14px -12px; border: 1px solid rgba(255,200,87,.6); border-radius: 31% 4% 28% 5% / 5% 32% 6% 28%; transform: rotate(-2deg); }
 .hero-art img { position: relative; display: block; width: 100%; height: auto; border: 8px solid #241733; border-radius: 32% 4% 28% 5% / 5% 32% 6% 28%; box-shadow: 0 32px 60px rgba(0,0,0,.42); }
@@ -135,7 +143,8 @@ dialog { width: min(820px, calc(100vw - 28px)); max-height: min(88vh, 900px); pa
 dialog::backdrop { background: rgba(3,5,16,.78); backdrop-filter: blur(5px); }
 .dialog-header { position: sticky; z-index: 3; top: 0; display: flex; align-items: start; justify-content: space-between; padding: 24px 28px 16px; background: var(--stall); border-bottom: 1px solid var(--line); }
 .dialog-header h2 { margin: 0; font-size: 2.25rem; }
-#gallery-start, #gallery-board, #gallery-student { padding: 28px; }
+#gallery-start, #gallery-board, #gallery-student, #gallery-demo { padding: 28px; }
+#gallery-demo p { max-width: 480px; color: var(--muted); }
 #gallery-start > p { color: var(--muted); }
 details label { display: block; margin-bottom: 6px; color: var(--muted); font-size: .82rem; font-weight: 800; }
 .submit-row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -182,6 +191,10 @@ details summary { min-height: 44px; font-weight: 800; cursor: pointer; }
   .site-header nav a { display: none; }
   .site-header nav { gap: 8px; }
   .intro { min-height: 0; padding: 44px 20px 96px; }
+  .demo-banner { align-items: flex-start; flex-direction: column; padding: 8px 16px; }
+  .demo-actions { width: 100%; }
+  .text-button { flex: 1; }
+  .intro-actions { align-items: flex-start; flex-direction: column; }
   h1 { font-size: clamp(3rem, 15vw, 4.5rem); }
   .hero-art { margin-top: 12px; }
   .hero-art figcaption { right: 4px; max-width: 220px; }
@@ -206,7 +219,7 @@ details summary { min-height: 44px; font-weight: 800; cursor: pointer; }
   footer { grid-template-columns: 1fr; padding: 40px 20px; }
   footer nav { gap: 20px; }
   .credit { grid-column: auto; }
-  #gallery-start, #gallery-board, #gallery-student { padding: 20px 16px; }
+  #gallery-start, #gallery-board, #gallery-student, #gallery-demo { padding: 20px 16px; }
   .dialog-header { padding: 20px 16px 14px; }
   .gallery-list article { align-items: flex-start; flex-direction: column; }
   .gallery-list article > div:last-child { width: 100%; }

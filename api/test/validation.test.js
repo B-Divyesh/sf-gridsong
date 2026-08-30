@@ -4,6 +4,7 @@ const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const { MAX_SUBMISSIONS, reserveSubmissionSlot, slotNumber } = require('../src/capacity.js');
+const { FULL_GALLERY_RETRY_AFTER_SECONDS, GALLERY_RETENTION_DAYS, GALLERY_RETENTION_MS } = require('../src/policy.js');
 const { expiredFilter, validNickname, validSong } = require('../src/validation.js');
 const root = join(__dirname, '..', '..');
 
@@ -84,6 +85,20 @@ test('fixed slots preserve the 120-song bound for legacy UUID submissions', asyn
   assert.equal(rows.size, MAX_SUBMISSIONS);
 });
 
+test('@claim:gallery-retention class boards retain only the documented 90-day lifetime', () => {
+  assert.equal(GALLERY_RETENTION_DAYS, 90);
+  assert.equal(GALLERY_RETENTION_MS, 90 * 24 * 60 * 60 * 1000);
+});
+
+test('@claim:gallery-capacity a full board returns a retryable 429 with Retry-After', () => {
+  const { fullGalleryResponse } = require('../src/functions/gallery.js');
+  const response = fullGalleryResponse();
+  assert.equal(response.status, 429);
+  assert.equal(response.jsonBody.error, 'This class gallery is full. Ask your teacher to make a new board.');
+  assert.equal(response.headers['retry-after'], String(FULL_GALLERY_RETRY_AFTER_SECONDS));
+  assert.equal(response.headers['cache-control'], 'no-store');
+});
+
 test('production deployment contract ships the Function API with the static app', async () => {
   const deployment = JSON.parse(await readFile(join(root, 'swa-cli.config.json'), 'utf8'));
   const staticConfig = JSON.parse(await readFile(join(root, 'public/staticwebapp.config.json'), 'utf8'));
@@ -95,6 +110,8 @@ test('production deployment contract ships the Function API with the static app'
   assert.equal(production.appName, 'sf-gridsong');
   assert.equal(production.apiVersion, '22');
   assert.equal(staticConfig.platform.apiRuntime, 'node:22');
+  const serviceWorkerRoute = staticConfig.routes.find(route => route.route === '/sw.js');
+  assert.equal(serviceWorkerRoute?.headers?.['Cache-Control'], 'no-cache');
 });
 
 test('managed Static Web Apps API uses HTTP-only expiry cleanup', async () => {
