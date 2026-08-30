@@ -1,6 +1,74 @@
 import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 const liveOrigin = process.env.GRIDSONG_LIVE_URL;
+
+test('deployed unknown URL returns the accessible 404 and recovers home', async ({ page }) => {
+  test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
+  const response = await page.goto(`${liveOrigin}/no-such-page?browser-check=${Date.now()}`);
+  expect(response?.status()).toBe(404);
+  await expect(page).toHaveTitle('Page not found — Gridsong');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Page not found');
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+  expect(results.violations).toEqual([]);
+  await page.getByRole('link', { name: 'Return to the composer' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make classroom songs together');
+});
+
+test('deployed demo keeps its accessibility, privacy, keyboard, reduced-motion, and offline contracts', async ({ browser }, testInfo) => {
+  test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
+  const viewport = testInfo.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 900 };
+  const context = await browser.newContext({ viewport });
+  const page = await context.newPage();
+  const requests: string[] = [];
+  const errors: string[] = [];
+  page.on('request', request => requests.push(request.url()));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('pageerror', error => errors.push(error.message));
+
+  try {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(`${liveOrigin}/demo?browser-check=${Date.now()}#composer`);
+    await expect(page).toHaveTitle('Demo — Gridsong');
+    await expect(page.locator('main')).toHaveCount(1);
+    await expect(page.locator('h1')).toHaveCount(1);
+    await expect(page.locator('.note-cell')).toHaveCount(256);
+    await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+
+    const first = page.locator('.note-cell').first();
+    await first.focus();
+    await page.keyboard.press('Space');
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('.note-cell').nth(1)).toBeFocused();
+    const motion = await page.locator('.note-cell.active').first().evaluate(element => {
+      const style = getComputedStyle(element);
+      return { duration: style.transitionDuration, transform: style.transform };
+    });
+    expect(Number.parseFloat(motion.duration)).toBeLessThanOrEqual(0.00001);
+    expect(motion.transform).toBe('none');
+
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    expect(results.violations).toEqual([]);
+    const widths = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth }));
+    expect(widths.page).toBeLessThanOrEqual(widths.viewport);
+    expect(requests.every(request => new URL(request).origin === new URL(liveOrigin!).origin)).toBe(true);
+    expect(errors).toEqual([]);
+
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.reload();
+    await expect.poll(() => page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.getRegistration();
+      return Boolean(registration?.active && !registration.waiting);
+    })).toBe(true);
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page).toHaveTitle('Demo — Gridsong');
+    await expect(page.locator('.note-cell')).toHaveCount(256);
+  } finally {
+    await context.setOffline(false);
+    await context.close();
+  }
+});
 
 test('deployed site sends a student song to the live teacher gallery', async ({ page, browser }) => {
   test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
