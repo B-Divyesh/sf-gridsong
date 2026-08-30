@@ -102,6 +102,7 @@ test('@claim:gallery-capacity a full board returns a retryable 429 with Retry-Af
 test('production deployment contract ships the Function API with the static app', async () => {
   const deployment = JSON.parse(await readFile(join(root, 'swa-cli.config.json'), 'utf8'));
   const staticConfig = JSON.parse(await readFile(join(root, 'public/staticwebapp.config.json'), 'utf8'));
+  const notFoundPage = await readFile(join(root, 'public/404.html'), 'utf8');
   const production = deployment.configurations.production;
   assert.deepEqual(
     { appLocation: production.appLocation, outputLocation: production.outputLocation, apiLocation: production.apiLocation },
@@ -110,6 +111,11 @@ test('production deployment contract ships the Function API with the static app'
   assert.equal(production.appName, 'sf-gridsong');
   assert.equal(production.apiVersion, '22');
   assert.equal(staticConfig.platform.apiRuntime, 'node:22');
+  assert.equal(staticConfig.navigationFallback, undefined);
+  assert.deepEqual(staticConfig.responseOverrides['404'], { rewrite: '/404.html' });
+  assert.ok(staticConfig.routes.some(route => route.route === '/demo' && route.rewrite === '/index.html'));
+  assert.match(notFoundPage, /<h1>Page not found<\/h1>/);
+  assert.match(notFoundPage, /href="\/">Return to the composer<\/a>/);
   const serviceWorkerRoute = staticConfig.routes.find(route => route.route === '/sw.js');
   assert.equal(serviceWorkerRoute?.headers?.['Cache-Control'], 'no-cache');
 });

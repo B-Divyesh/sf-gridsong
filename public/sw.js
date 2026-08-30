@@ -1,5 +1,5 @@
-const CACHE = 'gridsong-shell-v5';
-const SHELL = ['/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/privacy/', '/terms/'];
+const CACHE = 'gridsong-shell-v6';
+const SHELL = ['/404.html', '/apple-touch-icon.png', '/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/assets/gridsong-social.jpg', '/privacy/', '/terms/'];
 
 async function cacheShell() {
   const cache = await caches.open(CACHE);
@@ -30,5 +30,9 @@ self.addEventListener('fetch', event => {
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
     if (response.ok && new URL(event.request.url).origin === location.origin) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
     return response;
-  }).catch(() => event.request.mode === 'navigate' ? caches.match('/') : undefined)));
+  }).catch(() => {
+    if (event.request.mode !== 'navigate') return undefined;
+    const path = new URL(event.request.url).pathname;
+    return caches.match(path === '/' || path === '/demo' || path === '/demo/' ? '/' : '/404.html');
+  })));
 });

@@ -68,5 +68,12 @@
     "where": "README",
     "test": "npm run test:e2e -- --grep @claim:mobile-390",
     "sandbox": "390×844 browser project; assert no page-level horizontal overflow"
+  },
+  {
+    "id": "unknown-route-recovery",
+    "claim": "Mistyped addresses show a not-found page with a way back.",
+    "where": "404 page",
+    "test": "npm run test:e2e -- --grep @claim:unknown-route-recovery",
+    "sandbox": "fresh desktop and 390×844 browser contexts; request /no-such-page, assert HTTP 404, accessible page content, no overflow, and successful recovery to the composer"
   }
 ]

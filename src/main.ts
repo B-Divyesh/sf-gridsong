@@ -20,6 +20,10 @@ let galleryPoller = 0;
 
 if (isDemo) {
   document.title = 'Demo — Gridsong';
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', 'https://gridsong.sociobot.in/demo');
+  document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.setAttribute('content', 'Demo — Gridsong');
+  document.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.setAttribute('content', 'https://gridsong.sociobot.in/demo');
+  document.querySelector<HTMLMetaElement>('meta[name="twitter:title"]')?.setAttribute('content', 'Demo — Gridsong');
   document.body.classList.add('demo-mode');
 }
 
