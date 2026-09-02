@@ -60,7 +60,7 @@ test('demo banner actions have 44px targets and visible keyboard focus', async (
   }
 });
 
-test('@claim:demo-sandbox keeps the sample out of real-song storage and can reset it', async ({ page }) => {
+test('@claim:demo-sandbox keeps the sample out of real-song storage, resets it, and discards it on exit', async ({ page }) => {
   await page.goto('/');
   const first = page.locator('.note-cell').first();
   await first.click();
@@ -89,6 +89,24 @@ test('@claim:demo-sandbox keeps the sample out of real-song storage and can rese
   await expect(page).toHaveTitle('Demo — Gridsong');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
+  expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
+
+  await page.locator('.note-cell').first().click();
+  await page.evaluate(() => localStorage.setItem('demo:gridsong.gallery.v3.active', '{"sample":true}'));
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.song.v1'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.gallery.v3.active'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
+
+  await page.goto('/demo#composer');
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
+  await expect(page.getByText('This sample stays on this device.')).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('demo:gridsong.gallery.v3.active', '{"sample":true}'));
+  await page.locator('#start-real-gallery').click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.song.v1'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.gallery.v3.active'))).toBeNull();
   expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
 });
 
@@ -416,7 +434,7 @@ test('@claim:teacher-removes-submissions lets a teacher remove a submission with
   await expect(page.getByText('Submission removed.')).toBeVisible();
 });
 
-test('@claim:offline-reload opens the cached demo composer shell while offline', async ({ browser }) => {
+test('@claim:offline-reload composes, saves, and exports from the cached demo while offline', async ({ browser }) => {
   // This must own its context: closing/reusing the shared context would make
   // later browser tests fail and would not prove a clean offline reload.
   const context = await browser.newContext();
@@ -435,6 +453,24 @@ test('@claim:offline-reload opens the cached demo composer shell while offline',
     await expect(page).toHaveTitle('Demo — Gridsong');
     await expect(page.locator('.note-cell')).toHaveCount(256);
     await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+    await expect(page.locator('#offline-banner')).toHaveText('You’re offline — composing, local saves, and exports still work.');
+    await expect(page.locator('#offline-banner')).toBeVisible();
+
+    const first = page.locator('.note-cell').first();
+    await expect(first).toHaveAttribute('aria-pressed', 'false');
+    await first.click();
+    await expect(first).toHaveAttribute('aria-pressed', 'true');
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('demo:gridsong.song.v1') ?? '{}').notes?.some((note: { row: number; step: number }) => note.row === 0 && note.step === 0))).toBe(true);
+
+    await page.reload();
+    await expect(page.locator('.note-cell').first()).toHaveAttribute('aria-pressed', 'true');
+    const midi = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export MIDI' }).click();
+    await expect((await midi).suggestedFilename()).toMatch(/\.mid$/);
+    const wav = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export WAV' }).click();
+    await expect((await wav).suggestedFilename()).toMatch(/\.wav$/);
+    await expect(page.getByText('WAV exported.')).toBeVisible();
   } finally {
     await context.setOffline(false);
     await context.close();

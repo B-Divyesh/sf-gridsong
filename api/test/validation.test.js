@@ -137,6 +137,9 @@ test('@claim:gallery-record-schema persists only documented gallery fields and h
     createdAt: 150,
     expiresAt: 200
   });
+
+  const composer = await readFile(join(root, 'src', 'main.ts'), 'utf8');
+  assert.match(composer, /data-claim="gallery-record-schema">The gallery keeps each nickname, song, submission time, expiry, and protected key checks\. Boards close after 90 days\.<\/p>/);
 });
 
 test('@claim:gallery-expiry-cleanup rejects expired boards and deletes no more than 500 expired records', async () => {

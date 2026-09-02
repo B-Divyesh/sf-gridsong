@@ -15,13 +15,14 @@ Live: <https://gridsong.sociobot.in>
 - Your song saves on this device and in a copied song link. <!-- claim:local-save --> <!-- claim:complete-song-links -->
 - Export your song as a WAV or MIDI file. <!-- claim:browser-exports -->
 - Teachers can share a student class pass that submits to a board for 90 days. <!-- claim:student-pass-submit-only --> <!-- claim:gallery-retention -->
-- Use the grid by keyboard or on a phone. The composer works offline after its first visit. <!-- claim:keyboard-grid --> <!-- claim:mobile-390 --> <!-- claim:offline-reload -->
+- Use the grid by keyboard or on a phone. <!-- claim:keyboard-grid --> <!-- claim:mobile-390 -->
+- After the first visit, compose, save locally, and export WAV or MIDI while offline. <!-- claim:offline-reload -->
 
 ## Try the sample safely
 
 Open <https://gridsong.sociobot.in/demo#composer> or choose **Try it with sample data** on the first screen. The demo starts with a four-bar call-and-response and keeps demo edits apart from your real song. <!-- claim:demo-sandbox -->
 
-The persistent **Demo — sample data, nothing is saved** banner offers **Reset demo** and **Start for real**. Start for real opens a fresh composer without reading demo storage. <!-- claim:demo-sandbox -->
+The persistent **Demo — sample data, nothing is saved** banner offers **Reset demo** and **Start for real**. Start for real discards demo data and opens a fresh composer. <!-- claim:demo-sandbox -->
 
 ## Use the class gallery on another device
 

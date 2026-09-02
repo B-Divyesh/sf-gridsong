@@ -1,10 +1,10 @@
 [
   {
     "id": "demo-sandbox",
-    "claim": "Try the four-bar sample without saving it to your real songs.",
+    "claim": "Try the four-bar sample without saving it to your real songs, then discard its data when you start for real.",
     "where": "landing action, demo banner, README, Privacy",
     "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
-    "sandbox": "fresh browser context; create a real local song, enter /demo, edit and reset the sample; assert only demo:gridsong.song.v1 changes"
+    "sandbox": "fresh browser context; create a real local song, enter /demo, edit and reset the sample, use both Start for real controls; assert both demo: keys are discarded and the real song is unchanged"
   },
   {
     "id": "local-save",
@@ -29,10 +29,10 @@
   },
   {
     "id": "offline-reload",
-    "claim": "Works offline after the first visit.",
-    "where": "README",
+    "claim": "After the first visit, you can compose, save locally, and export WAV or MIDI while offline.",
+    "where": "offline banner, README",
     "test": "npm run test:e2e -- --grep @claim:offline-reload",
-    "sandbox": "dedicated browser context; visit /demo, wait for its service worker, go offline, reload, and assert the demo grid remains usable"
+    "sandbox": "dedicated browser context; visit /demo, wait for its service worker, go offline, reload, toggle a note, reload the saved edit, and assert WAV and MIDI downloads complete"
   },
   {
     "id": "privacy-local-demo",
@@ -127,8 +127,8 @@
   },
   {
     "id": "gallery-record-schema",
-    "claim": "The gallery stores the nickname, song, submission time, and expiry, with protected checks instead of usable class or teacher keys.",
-    "where": "README, Privacy",
+    "claim": "The class gallery stores nicknames, songs, submission times, expiry, and protected key checks instead of usable class or teacher keys.",
+    "where": "class-gallery creation dialog, README, Privacy",
     "test": "npm run test:api -- --test-name-pattern @claim:gallery-record-schema",
     "sandbox": "API storage-shape test asserts the persisted gallery and submission records contain the documented fields and hashes rather than raw capabilities"
   },

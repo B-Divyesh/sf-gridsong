@@ -26,6 +26,13 @@ test('deployed polish findings stay fixed on cold routes', async ({ browser }, t
     await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
     await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
     expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
+    await page.locator('.note-cell').first().click();
+    await page.evaluate(() => localStorage.setItem('demo:gridsong.gallery.v3.active', '{"sample":true}'));
+    await page.getByRole('button', { name: 'Start for real' }).click();
+    await expect(page).toHaveURL(`${liveOrigin}/`);
+    expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.song.v1'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.gallery.v3.active'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
 
     for (const route of ['/privacy/', '/terms/']) {
       await page.goto(`${liveOrigin}${route}`);
@@ -142,6 +149,20 @@ test('deployed demo keeps its accessibility, privacy, keyboard, reduced-motion, 
     await page.reload();
     await expect(page).toHaveTitle('Demo — Gridsong');
     await expect(page.locator('.note-cell')).toHaveCount(256);
+    await expect(page.locator('#offline-banner')).toHaveText('You’re offline — composing, local saves, and exports still work.');
+    await expect(page.locator('#offline-banner')).toBeVisible();
+    const offlineFirst = page.locator('.note-cell').first();
+    await offlineFirst.click();
+    await expect(offlineFirst).toHaveAttribute('aria-pressed', 'true');
+    await page.reload();
+    await expect(page.locator('.note-cell').first()).toHaveAttribute('aria-pressed', 'true');
+    const midi = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export MIDI' }).click();
+    await expect((await midi).suggestedFilename()).toMatch(/\.mid$/);
+    const wav = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export WAV' }).click();
+    await expect((await wav).suggestedFilename()).toMatch(/\.wav$/);
+    await expect(page.getByText('WAV exported.')).toBeVisible();
   } finally {
     await context.setOffline(false);
     await context.close();

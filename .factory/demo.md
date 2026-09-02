@@ -18,10 +18,13 @@ Normal songs use `gridsong.song.v1`; demo songs use
 the equivalent separate namespaces. Demo mode neither reads nor writes a real
 song key, and its gallery dialog never makes an API request. The persistent
 banner exposes **Reset demo**, which restores the shipped sample, and **Start
-for real**, which opens `/` without importing demo data.
+for real**, which clears both demo keys and opens `/` without importing demo
+data. Reaching the real composer also clears both demo keys, including after a
+direct address-bar navigation.
 
 ## Offline
 
 The service worker caches the shell and sample code after the first visit. The
 `@claim:offline-reload` browser test uses its own context, takes it offline,
-and reloads `/demo`.
+reloads `/demo`, edits and reloads the saved sample, and downloads WAV and
+MIDI.

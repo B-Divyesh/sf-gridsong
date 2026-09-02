@@ -1,4 +1,4 @@
-# Copy audit — polish round 2
+# Copy audit — polish round 3
 
 Reviewed 2 September 2026. The first screen names the job, K–8 audience, sample action, next result, and three concrete facts. Counts treat hyphenated terms as one word.
 
@@ -25,6 +25,7 @@ Reviewed 2 September 2026. The first screen names the job, K–8 audience, sampl
 | 6 | Play submitted songs for the class. |
 | 9 | Songs stay on this device until you share them. |
 | 5 | No accounts, ads, or tracking. |
+| 9 | You’re offline — composing, local saves, and exports still work. |
 
 ## Class gallery states
 
@@ -33,7 +34,8 @@ Reviewed 2 September 2026. The first screen names the job, K–8 audience, sampl
 | 8 | Create a 90-day board on the teacher device. |
 | 7 | You will get a student class pass. |
 | 5 | New submissions appear here automatically. |
-| 11 | The gallery keeps only nickname and song data for 90 days. |
+| 13 | The gallery keeps each nickname, song, submission time, expiry, and protected key checks. |
+| 5 | Boards close after 90 days. |
 | 10 | There are no accounts, email addresses, or student gallery browsing. |
 | 6 | This sample stays on this device. |
 | 11 | Start for real to create a class board and invite students. |
@@ -65,11 +67,11 @@ Reviewed 2 September 2026. The first screen names the job, K–8 audience, sampl
 | 9 | Export your song as a WAV or MIDI file. |
 | 15 | Teachers can share a student class pass that submits to a board for 90 days. |
 | 9 | Use the grid by keyboard or on a phone. |
-| 8 | The composer works offline after its first visit. |
+| 14 | After the first visit, compose, save locally, and export WAV or MIDI while offline. |
 | 13 | Open the demo URL or choose Try it with sample data on the first screen. |
 | 16 | The demo starts with a four-bar call-and-response and keeps demo edits apart from your real song. |
 | 17 | The persistent Demo — sample data, nothing is saved banner offers Reset demo and Start for real. |
-| 11 | Start for real opens a fresh composer without reading demo storage. |
+| 11 | Start for real discards demo data and opens a fresh composer. |
 | 14 | The teacher creates a board on the projector and copies its student class pass. |
 | 10 | Students can use the student class pass on another device. |
 | 12 | It sends a nickname and song but cannot read the teacher’s board. |

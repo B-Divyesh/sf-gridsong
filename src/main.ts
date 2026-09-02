@@ -10,6 +10,20 @@ const isDemo = isDemoLocation(location.pathname, location.search);
 const SONG_KEY = isDemo ? DEMO_SONG_KEY : REAL_SONG_KEY;
 const ACTIVE_GALLERY_KEY = isDemo ? DEMO_GALLERY_KEY : REAL_GALLERY_KEY;
 const player = new Player();
+
+function discardDemoData(): void {
+  try {
+    localStorage.removeItem(DEMO_SONG_KEY);
+    localStorage.removeItem(DEMO_GALLERY_KEY);
+  } catch {
+    // A blocked local-storage area must not prevent a visitor leaving the demo.
+  }
+}
+
+// Reaching the real composer is an explicit boundary: it must never retain or
+// revive the isolated sample, even if someone leaves with an address-bar URL.
+if (!isDemo) discardDemoData();
+
 let song = loadInitialSong();
 let currentBar = 0;
 let selectedVoice: VoiceName = 'lantern';
@@ -132,14 +146,15 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <div class="offline-banner" id="offline-banner" role="status" hidden>You’re offline — composing, local saves, and exports still work.</div>
+  <div class="offline-banner" id="offline-banner" role="status" data-claim="offline-reload" hidden>You’re offline — composing, local saves, and exports still work.</div>
 
   <dialog id="gallery-dialog" aria-labelledby="gallery-title">
     <div class="dialog-header"><div><p class="eyebrow">Class gallery setup</p><h2 id="gallery-title">Class gallery</h2></div><button class="icon-button" id="close-gallery" type="button" aria-label="Close gallery">×</button></div>
     <div id="gallery-start">
       <p>Create a 90-day board on the teacher device. You will get a student class pass. New submissions appear here automatically.</p>
       <button class="button primary" id="create-gallery" type="button">Create class board</button>
-      <p class="privacy-note">The gallery keeps only nickname and song data for 90 days. There are no accounts, email addresses, or student gallery browsing.</p>
+      <p class="privacy-note" data-claim="gallery-record-schema">The gallery keeps each nickname, song, submission time, expiry, and protected key checks. Boards close after 90 days.</p>
+      <p class="privacy-note">There are no accounts, email addresses, or student gallery browsing.</p>
     </div>
     <div id="gallery-demo" hidden>
       <p><strong>This sample stays on this device.</strong> Start for real to create a class board and invite students.</p>
@@ -391,16 +406,14 @@ get<HTMLButtonElement>('new-song').addEventListener('click', () => {
 });
 
 function startForReal(): void {
-  // Demo storage is deliberately left in its separate namespace. The real app
-  // never reads it, and a later demo visit can still be reset explicitly.
+  discardDemoData();
   location.assign('/');
 }
 
 function resetDemo(): void {
   if (!isDemo) return;
   stopPlayback();
-  localStorage.removeItem(DEMO_SONG_KEY);
-  localStorage.removeItem(DEMO_GALLERY_KEY);
+  discardDemoData();
   song = sampleSong();
   currentBar = 0;
   history.replaceState(null, '', `${location.pathname}${location.search}`);
