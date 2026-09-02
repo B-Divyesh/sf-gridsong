@@ -3,6 +3,44 @@ import AxeBuilder from '@axe-core/playwright';
 
 const liveOrigin = process.env.GRIDSONG_LIVE_URL;
 
+test('deployed polish findings stay fixed on cold routes', async ({ browser }, testInfo) => {
+  test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
+  const viewport = testInfo.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 900 };
+  const context = await browser.newContext({ viewport });
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('pageerror', error => errors.push(error.message));
+  try {
+    await page.goto(`${liveOrigin}/?cold=${Date.now()}`);
+    const banner = page.locator('#demo-banner');
+    await expect(banner).toBeHidden();
+    expect(await banner.evaluate(element => ({ display: getComputedStyle(element).display, height: element.getBoundingClientRect().height }))).toEqual({ display: 'none', height: 0 });
+    await expect(page.getByText('Original synths and generated illustration.')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    const realSong = await page.evaluate(() => localStorage.getItem('gridsong.song.v1'));
+
+    await page.goto(`${liveOrigin}/?demo=1&cold=${Date.now()}#composer`);
+    await expect(page).toHaveTitle('Demo — Gridsong');
+    await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+    await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
+    expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
+
+    for (const route of ['/privacy/', '/terms/']) {
+      await page.goto(`${liveOrigin}${route}`);
+      await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Footer' })).toBeVisible();
+      await page.keyboard.press('Tab');
+      await expect(page.locator('.skip-link')).toBeFocused();
+      await page.keyboard.press('Enter');
+      await expect(page.locator('main')).toBeFocused();
+    }
+    expect(errors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
 test('deployed unknown URL returns the accessible 404 and recovers home', async ({ page }) => {
   test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
   const response = await page.goto(`${liveOrigin}/no-such-page?browser-check=${Date.now()}`);
