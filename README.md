@@ -40,7 +40,7 @@ Each board accepts 120 songs and closes after 90 days. <!-- claim:gallery-capaci
 Requires Node.js 22+. <!-- claim:developer-runtime -->
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
@@ -50,7 +50,7 @@ Audio starts only after a user presses **Play**. <!-- claim:audio-user-gesture -
 
 ```sh
 npm test          # unit tests
-npm run test:api  # API validation + deployment-contract tests
+npm run test:api  # clean-install API dependencies, then run API tests
 npm run test:e2e  # Chromium desktop + 390px mobile, including axe
 npm run build     # reproducible production output in dist/
 npm run preview   # serve dist locally
