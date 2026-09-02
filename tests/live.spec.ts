@@ -34,6 +34,16 @@ test('deployed polish findings stay fixed on cold routes', async ({ browser }, t
     expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.gallery.v3.active'))).toBeNull();
     expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
 
+    await page.goto(`${liveOrigin}/demo?cold=${Date.now()}#composer`);
+    await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
+    await expect(page.getByText('This sample stays on this device.')).toBeVisible();
+    await page.evaluate(() => localStorage.setItem('demo:gridsong.gallery.v3.active', '{"sample":true}'));
+    await page.locator('#start-real-gallery').click();
+    await expect(page).toHaveURL(`${liveOrigin}/`);
+    expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.song.v1'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('demo:gridsong.gallery.v3.active'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
+
     for (const route of ['/privacy/', '/terms/']) {
       await page.goto(`${liveOrigin}${route}`);
       await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
@@ -71,6 +81,9 @@ test('deployed round-two copy, header, gallery route, and focus fixes hold', asy
   await page.goto(liveOrigin!);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make and play songs on a classroom grid');
   await expect(page.getByRole('button', { name: 'Start new song' })).toBeVisible();
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
+  await expect(page.getByText('The gallery keeps each nickname, song, submission time, expiry, and protected key checks. Boards close after 90 days.')).toBeVisible();
+  await page.getByRole('button', { name: 'Close gallery' }).click();
   const copy = await page.locator('body').innerText();
   for (const removed of ['every student device', 'student class link', 'Classroom loop', 'Paint melody with', 'Play and celebrate together', 'Local-first classroom music']) {
     expect(copy).not.toContain(removed);
@@ -152,10 +165,12 @@ test('deployed demo keeps its accessibility, privacy, keyboard, reduced-motion, 
     await expect(page.locator('#offline-banner')).toHaveText('You’re offline — composing, local saves, and exports still work.');
     await expect(page.locator('#offline-banner')).toBeVisible();
     const offlineFirst = page.locator('.note-cell').first();
+    const beforeOfflineEdit = await offlineFirst.getAttribute('aria-pressed');
+    const afterOfflineEdit = beforeOfflineEdit === 'true' ? 'false' : 'true';
     await offlineFirst.click();
-    await expect(offlineFirst).toHaveAttribute('aria-pressed', 'true');
+    await expect(offlineFirst).toHaveAttribute('aria-pressed', afterOfflineEdit);
     await page.reload();
-    await expect(page.locator('.note-cell').first()).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.note-cell').first()).toHaveAttribute('aria-pressed', afterOfflineEdit);
     const midi = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export MIDI' }).click();
     await expect((await midi).suggestedFilename()).toMatch(/\.mid$/);

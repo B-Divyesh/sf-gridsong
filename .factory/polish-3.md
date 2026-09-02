@@ -1,0 +1,31 @@
+# Polish round 3 — zero-finding repair map
+
+Repaired from the review-3 candidate at `4889fb2c473080d9613b484353b67832ae291645`. The deployed product bundle is from repair commit `692cb842c5cdd28001eb970c250facc092bc2793`.
+
+| Finding | Change made | Evidence | Screenshot and live re-check |
+| --- | --- | --- | --- |
+| F-1-1 | Kept the real route free of demo controls and retained separate demo keys. Normal composer entry also clears stale demo keys as a defensive exit boundary. | `puts the teacher audience and sample action on the cold first screen`; `@claim:demo-sandbox`. | `live/demo-mobile.png`; `deployed polish findings stay fixed on cold routes` at <https://gridsong.sociobot.in/> and <https://gridsong.sociobot.in/demo#composer>. |
+| F-1-2 | Kept the README opening split into short classroom sentences. | `polish round 2 copy contract`; `.factory/copy-audit.md`. | Cold README and home check at <https://gridsong.sociobot.in/>. |
+| F-1-3 | Kept reader-facing README features in classroom language and deployment detail in contributor sections. | `polish round 2 copy contract`; `.factory/copy-audit.md`. | Cold README check at <https://gridsong.sociobot.in/>. |
+| F-1-4 | Retained the exact-body `gallery-submission-data` claim and test. | `@claim:gallery-submission-data`. | Gallery flow rechecked at <https://gridsong.sociobot.in/#class-gallery>. |
+| F-1-5 | Kept the untestable originality slogan out of rendered product copy. | `polish round 2 copy contract`; `deployed polish findings stay fixed on cold routes`. | `live/screenshot-mobile.png`; <https://gridsong.sociobot.in/>. |
+| F-1-6 | Kept the identical grid-mark header, skip link, destinations, footer, and build label on app, legal, and 404 routes. | `every route uses the same complete product header`; `legal routes retain skip-link behavior and the complete footer`. | `live/privacy-desktop.png`, `live/404-desktop.png`; <https://gridsong.sociobot.in/privacy/>, <https://gridsong.sociobot.in/terms/>, and a cold unknown URL. |
+| F-2-1 | Kept bounded “another device” wording rather than an untestable every-device promise. | `@claim:student-pass-submit-only`; `@claim:gallery-direct-submit`; copy contract. | Live class-gallery flow at <https://gridsong.sociobot.in/#class-gallery>. |
+| F-2-2 | Kept route-entry focus and polite heading announcements for forward and Back navigation. | `forward and back route changes focus and announce the page heading`. | `deployed round-two copy, header, gallery route, and focus fixes hold` at home, Privacy, and Demo. |
+| F-2-3 | Kept **student class pass** as the sole invitation term. | `polish round 2 copy contract`; `.factory/copy-audit.md`. | `live/gallery-desktop.png`; <https://gridsong.sociobot.in/#class-gallery>. |
+| F-2-4 | Kept result-naming actions **Open class gallery** and **Start new song**. | `polish round 2 copy contract`. | `deployed round-two copy, header, gallery route, and focus fixes hold` at <https://gridsong.sociobot.in/>. |
+| F-2-5 | Kept task language in headings, sound instructions, gallery text, footer, and default title. | `polish round 2 copy contract`; `.factory/copy-audit.md`. | `live/demo-mobile.png`; <https://gridsong.sociobot.in/>. |
+| F-2-6 | Kept plain-language storage and expiry wording. | `@claim:gallery-record-schema`; `@claim:gallery-expiry-cleanup`; copy contract. | `live/privacy-desktop.png`; <https://gridsong.sociobot.in/privacy/>. |
+| F-3-1 | `Start for real` now removes both `demo:gridsong.song.v1` and `demo:gridsong.gallery.v3.active` before navigation. Reaching the real composer also clears those keys. Both banner and gallery exit controls are covered. | Expanded `@claim:demo-sandbox`; live `deployed polish findings stay fixed on cold routes` on desktop and 390px. | `live/demo-mobile.png`; <https://gridsong.sociobot.in/demo#composer>. |
+| F-3-2 | Registered the full offline promise in `claims.json`, marked the banner, rewrote the README, and expanded the dedicated isolated-context test to edit, persist through offline reload, and download WAV and MIDI. | Expanded `@claim:offline-reload`; live `deployed demo keeps its accessibility, privacy, keyboard, reduced-motion, and offline contracts`. | `live/demo-mobile.png`; <https://gridsong.sociobot.in/demo#composer>. |
+| F-3-3 | Replaced the incomplete “only nickname and song” dialog copy with the actual fields: nickname, song, submission time, expiry, and protected key checks; marked it with `gallery-record-schema`. The existing schema test now asserts that rendered disclosure too. | Expanded `@claim:gallery-record-schema`; live `deployed round-two copy, header, gallery route, and focus fixes hold`. | `live/gallery-desktop.png`; <https://gridsong.sociobot.in/#class-gallery>. |
+
+## Verification
+
+- Fresh clone: `/tmp/gridsong-polish-3-clean-8RRZF0` at `692cb842c5cdd28001eb970c250facc092bc2793`; `npm ci` and `npm --prefix api ci --ignore-scripts` ran before every one of the 26 exact commands in `.factory/claims.json`. All passed. The full clone follow-up passed `npm test` (16), `npm run test:api` (14), and `npm run build` with `dist/index.html`.
+- Local: `npm run test:e2e` passed 62 desktop/mobile browser tests, including Playwright Axe coverage. `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4174 .factory/evidence/polish-3/local` returned 200 with title, language, one h1, main, image-alt, labelled-button, and zero-console-error checks.
+- Local Lighthouse mobile: performance 99, accessibility 100, best practices 100, SEO 100; LCP 1.89 s, CLS 0, TBT 103 ms. Report: `.factory/evidence/polish-3/local/lighthouse.json`.
+- Production: `GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1` passed 10 desktop/mobile checks. `npm run test:live` passed malformed-input smoke, live teacher/student create-submit-read-delete, and three atomic capacity trials.
+- Live URL verifier: `.factory/evidence/polish-3/live/verify.json` records 200, title/lang/h1/main/alt/button checks, and no console errors. Mobile Lighthouse scored performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.42 s, CLS 0, TBT 26 ms in `.factory/evidence/polish-3/live/lighthouse.json`.
+
+No findings of any severity remain.
