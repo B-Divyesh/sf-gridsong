@@ -27,7 +27,7 @@ All findings in `.factory/review-1.md` and `.factory/review-2.md` are repaired i
 - Lighthouse mobile: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.8 s, CLS 0, TBT 10 ms.
 - Build sizes: JavaScript 38.62 KB raw / 12.91 KB gzip; CSS 17.81 KB raw / 4.85 KB gzip.
 - The 390 px first screen has no horizontal overflow; the sample action ends at 629 px in an 844 px viewport.
-- Every command in `.factory/claims.json` will be rerun individually from a clean clone of the committed repair before deployment.
+- Every one of the 26 commands in `.factory/claims.json` passed individually from clean clone `/tmp/gridsong-polish2-clean-k5HUAj` at commit `a857790`.
 
 ## Evidence and operation
 

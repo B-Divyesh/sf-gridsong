@@ -27,6 +27,7 @@ Repaired from candidate `047f912a5e5a533b10c061fe35c6829d77080e9e` against `.fac
 - Lighthouse mobile: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.8 s, CLS 0, TBT 10 ms.
 - Playwright Axe scans cover app, demo, legal, and 404 routes at desktop and 390 px with zero serious or critical findings.
 - The first sample action ends at 629 px on the 390×844 first screen and 791 px on the 1440×900 first screen. Both fit without scrolling or horizontal overflow.
+- All 26 exact commands declared by `.factory/claims.json` passed individually from clean clone `/tmp/gridsong-polish2-clean-k5HUAj` at commit `a857790`.
 
 ## Screenshot evidence
 
