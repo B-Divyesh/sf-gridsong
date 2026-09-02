@@ -99,14 +99,14 @@
   },
   {
     "id": "gallery-direct-submit",
-    "claim": "Students can send a nickname and song directly to the teacher’s projector board.",
+    "claim": "Students can use a student class pass on another device to send a nickname and song directly to the teacher’s projector board.",
     "where": "classroom section, class-gallery dialog, README",
     "test": "npm run test:e2e -- --grep @claim:gallery-direct-submit",
     "sandbox": "two fresh browser contexts and a same-origin gallery service fixture; assert pass → direct submit → teacher poll with no ticket pasting"
   },
   {
     "id": "student-pass-submit-only",
-    "claim": "A student class pass works on another device to submit a song, but cannot read the teacher’s board.",
+    "claim": "A student class pass can submit songs but cannot read the teacher’s board.",
     "where": "landing class-gallery steps, README, Privacy, Terms",
     "test": "npm run test:api -- --test-name-pattern @claim:student-pass-submit-only",
     "sandbox": "API capability test proves a student key cannot satisfy the teacher-key read guard while the teacher key can"

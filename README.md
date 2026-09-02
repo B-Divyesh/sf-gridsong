@@ -25,7 +25,7 @@ The persistent **Demo — sample data, nothing is saved** banner offers **Reset 
 
 ## Use the class gallery on another device
 
-The teacher creates a board on the projector and copies its **student class pass**. Students can use the student class pass on another device. It sends a nickname and song but cannot read the teacher’s board. <!-- claim:student-pass-submit-only -->
+The teacher creates a board on the projector and copies its **student class pass**. Students can use the student class pass on another device. It sends a nickname and song but cannot read the teacher’s board. <!-- claim:gallery-direct-submit --> <!-- claim:student-pass-submit-only -->
 
 New songs appear on the open projector board. <!-- claim:gallery-direct-submit -->
 

@@ -34,7 +34,7 @@
     <h2>What stays on your device</h2>
     <p data-claim="local-save teacher-key-browser demo-sandbox browser-exports complete-song-links">Your current song and the teacher access key for the last class board are stored in that browser’s local storage. The sample demo uses separate keys beginning with <code>demo:gridsong.</code>, so it does not read or write your real song. Student compositions can also be saved as links or WAV/MIDI files on the device.</p>
     <h2>What a student class pass or song link contains</h2>
-    <p data-claim="student-pass-submit-only teacher-key-browser complete-song-links">A student class pass contains a board ID, a key that can only send songs, and an expiry. It works on another device but cannot read the teacher’s private board. A song link carries the title, notes, tempo, scale, length, and sound choices in its address.</p>
+    <p data-claim="gallery-direct-submit student-pass-submit-only teacher-key-browser complete-song-links">A student class pass contains a board ID, a key that can only send songs, and an expiry. It works on another device but cannot read the teacher’s private board. A song link carries the title, notes, tempo, scale, length, and sound choices in its address.</p>
     <p>Anyone who receives a student class pass can send a song. Anyone with a song link can read its song data. Do not use full names or include sensitive information in song titles.</p>
     <h2>What the class gallery stores</h2>
     <p data-claim="gallery-record-schema gallery-submission-data">When a student sends a song, the gallery stores the nickname, song, submission time, expiry, and protected key checks. It never stores usable class or teacher keys. The request contains only the student class pass, nickname, and song.</p>

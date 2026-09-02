@@ -96,6 +96,7 @@ test('@claim:student-pass-submit-only a submit key cannot satisfy the teacher-bo
   const studentKey = 'student-key-0123456789_abcdef0123456789';
   const entity = galleryEntity('12345678-1234-4234-9234-123456789abc', 100, Date.now() + 60_000, teacherKey, studentKey);
   assert.equal(sameToken(teacherKey, entity.teacherKeyHash), true);
+  assert.equal(sameToken(studentKey, entity.studentKeyHash), true);
   assert.equal(sameToken(studentKey, entity.teacherKeyHash), false);
 
   const active = await activeGallery({ getEntity: async () => entity }, entity.partitionKey);
