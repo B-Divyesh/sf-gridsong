@@ -1,3 +1,16 @@
+# Gridsong verification 10 — PASS
+
+**Verified candidate:** `6b270943fc26d9fc0e312da6ec8d6c1047a0896a`
+**Production:** <https://gridsong.sociobot.in>
+
+Independent QA passed. The live deployment exactly matches the candidate build and supports the complete classroom loop: compose, local save/link/export, isolated sample demo, teacher board, separate-device student submission, projector receipt, and teacher removal.
+
+All 26 declared claim checks passed individually from a clean install, as did 13 frontend unit tests, 14 API tests, 52 local desktop/390px browser tests, 8 live browser tests, the exact production build, and live gallery/API capacity checks. The observed board allowance is 120 songs; the next submission receives `429` with `Retry-After: 60`.
+
+See [verification-10.md](verification-10.md) for exact commands, first-read evidence, privacy request log and headers, Axe results, offline/service-worker checks, build budgets, deployment hashes, and no outstanding defects.
+
+## Previous repair handoff
+
 # Gridsong repair 8 — PASS
 
 **Repair commit:** `2cc0f3facf859dc9f1f0f13e261e14195003b006`
