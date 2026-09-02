@@ -45,6 +45,7 @@ a:hover { color: var(--paper); }
 .demo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .text-button { min-height: 44px; padding: 10px 12px; color: var(--ink); background: transparent; border: 1px solid rgba(9,13,34,.5); border-radius: 5px; font-weight: 800; line-height: 1.2; cursor: pointer; }
 .text-button:hover { background: rgba(255,247,222,.55); }
+.text-button:focus-visible { outline-color: var(--ink); }
 
 main { overflow: clip; }
 main:focus { outline: none; }

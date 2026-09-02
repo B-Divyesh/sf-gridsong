@@ -52,8 +52,9 @@ test('demo banner actions have 44px targets and visible keyboard focus', async (
     await expect(action).toBeFocused();
     const focus = await action.evaluate(element => {
       const style = getComputedStyle(element);
-      return { outlineStyle: style.outlineStyle, outlineWidth: parseFloat(style.outlineWidth) };
+      return { outlineColor: style.outlineColor, outlineStyle: style.outlineStyle, outlineWidth: parseFloat(style.outlineWidth) };
     });
+    expect(focus.outlineColor).toBe('rgb(9, 13, 34)');
     expect(focus.outlineStyle).not.toBe('none');
     expect(focus.outlineWidth).toBeGreaterThanOrEqual(3);
   }
