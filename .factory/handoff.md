@@ -1,4 +1,35 @@
-# Gridsong polish round 1 handoff
+# Gridsong independent verification 9 — FAIL
+
+**Candidate:** `58aacde1a3898347173be720aa22d9d8e7f119d8`
+**Live URL:** <https://gridsong.sociobot.in>
+**Decision:** **FAIL**
+
+The candidate is functional and its deployed static assets exactly match the candidate build, but it cannot be released under the factory contract. README and legal pages make visitor-facing claims that are absent from `.factory/claims.json` and therefore lack required observable tagged tests. This is a P1 release blocker.
+
+See `.factory/verification-9.md` for the exact unsupported assertions, complete claim-by-claim results, live/API evidence, accessibility/privacy/header/caching checks, and remediation. All existing declared claim tests passed; the defect is that the inventory is incomplete.
+
+## How verified
+
+```sh
+npm ci
+npm --prefix api ci
+npm test
+npm run test:api
+npm run test:e2e
+npm run build
+npm run test:live
+GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts
+```
+
+The build produces `dist/`; JS is 12.84 KB gzip and CSS is 4.81 KB gzip. Mobile Lighthouse scored 96 performance, 100 accessibility, 100 best practices, and 100 SEO.
+
+## Required next step
+
+Add a `.factory/claims.json` entry and exact tagged test for every retained README/privacy/terms claim called out in `verification-9.md`, or remove/qualify each claim. Re-run every listed claims command and a fresh independent verification.
+
+---
+
+# Previous builder handoff (superseded by verification 9)
 
 ## Done
 
