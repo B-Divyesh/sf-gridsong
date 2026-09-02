@@ -1,0 +1,14 @@
+{
+  "candidateBehaviorCheckedAt": "https://gridsong.sociobot.in/api",
+  "createBoard": { "status": 201, "cacheControl": "no-store", "setCookie": null },
+  "studentKeyBoardRead": { "status": 404 },
+  "invalidSubmission": { "status": 400, "message": "Use a short nickname and a song made in Gridsong, then try again." },
+  "singleClientCapacity": {
+    "allowance": 120,
+    "accepted": 120,
+    "persisted": 120,
+    "nextStatus": 429,
+    "retryAfterSeconds": 60
+  },
+  "cleanup": "All verifier-created submissions were deleted."
+}

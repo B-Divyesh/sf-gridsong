@@ -1,0 +1,61 @@
+{
+  "candidate": "56f2390809d880f71a4306eed173d1f6b28b02bd",
+  "url": "https://gridsong.sociobot.in",
+  "viewport": "390x844",
+  "firstRead": {
+    "heading": "Make and play songs on a classroom grid",
+    "audience": "For K–8 music teachers and students who want to compose, save, share, and hear their songs.",
+    "action": "Try it with sample data",
+    "actionBottomPx": 629.03,
+    "viewportHeightPx": 844
+  },
+  "sample": {
+    "title": "Morning call and response",
+    "bars": 4,
+    "savedNotes": 48,
+    "visibleActiveNotesInFirstBar": 12
+  },
+  "exports": {
+    "midi": { "bytes": 429, "magic": "MThd" },
+    "wav": { "bytes": 1716552, "magic": "RIFF/WAVE" },
+    "maxDurationWav": { "bars": 64, "bpm": 50, "bytes": 54278324, "elapsedMs": 908, "magic": "RIFF/WAVE" }
+  },
+  "boundaries": {
+    "scale": "chromatic",
+    "bars": 64,
+    "octaves": 4,
+    "tempoMax": "200 BPM",
+    "tempoMin": "50 BPM",
+    "visibleGridCells": 800
+  },
+  "recovery": {
+    "invalidSongLink": "That song link got tangled. You can start a fresh song or ask for a new link. Starting a fresh song.",
+    "blankNickname": "Add a nickname first.",
+    "blankSong": "Add at least one note before submitting.",
+    "invalidStudentPass": "That student class pass is not valid."
+  },
+  "accessibility": {
+    "axeViolations": 0,
+    "keyboardSpaceToggledNote": true,
+    "keyboardArrowMovedFocus": true,
+    "dialogInitialFocus": "Close gallery",
+    "dialogReturnedFocus": true,
+    "focusOutline": "3px solid rgb(255, 200, 87)",
+    "reducedMotionTransition": "0.00001s",
+    "pageHorizontalOverflow": false,
+    "noteTargets": { "countDefault": 256, "widthPx": 40, "heightPx": 44, "columnGapPx": 4, "rowGapPx": 4 },
+    "otherUndersizedTargets": [
+      "Header Gridsong home: 138.1x36 px",
+      "Footer Gridsong: 92.1x20 px",
+      "Footer Privacy: 57.9x24.8 px",
+      "Footer Terms: 47.1x24.8 px"
+    ]
+  },
+  "privacy": {
+    "observedOrigins": ["https://gridsong.sociobot.in"],
+    "setCookieResponses": 0,
+    "browserCookies": 0,
+    "demoGalleryApiRequests": 0
+  },
+  "consoleOrPageErrors": []
+}

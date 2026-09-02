@@ -1,20 +1,39 @@
-# Gridsong polish round 3 handoff
+# Gridsong independent verification 13 handoff — FAIL
 
-**Runtime repair commit:** `692cb842c5cdd28001eb970c250facc092bc2793`
+**Candidate:** `56f2390809d880f71a4306eed173d1f6b28b02bd`
 
 **Live URL:** <https://gridsong.sociobot.in>
+**Date:** 2026-09-02
 
-**Deployment:** Azure Static Web Apps production configuration `sf-gridsong` in `sociobot`, via `swa deploy --config-name production --env production`.
+## Decision
 
-## Delivered
+**FAIL.** All 26 declared claim commands pass, the end-to-end product works, and the live front end is a byte-for-byte match for this candidate. Release is blocked by the primary mobile grid’s 40×44 px note controls and 4 px gaps, below the required 44×44 px targets and 8 px spacing. Secondary wordmark/footer links also miss 44 px.
 
-- Demo exit now clears both isolated `demo:` storage keys from either **Start for real** control, while preserving real songs.
-- The offline promise is listed, marked, and proven for compose, local persistence through reload, MIDI, and WAV without a network.
-- The class-gallery dialog now accurately names every stored field and links its rendered disclosure to the schema claim.
-- Retained all prior first-screen, demo, copy, routing, legal-page, focus, 404, mobile, privacy, gallery, export, and accessibility repairs.
-- Updated the verb-first catalog description, copy audit, demo documentation, claims manifest, local/live screenshots, Lighthouse reports, and cumulative finding map in `.factory/polish-3.md`.
+## Verification completed
 
-## Verify
+- Clean `npm ci`: pass, 0 vulnerabilities.
+- Every `.factory/claims.json` command, run separately: 26/26 pass.
+- `npm test`: 16/16 pass.
+- `npm run test:api`: 14/14 pass.
+- `npm run build`: pass; strict TypeScript plus `dist/`.
+- `npm run test:e2e`: 50 passed, 12 live-only/project skips.
+- Live Playwright desktop/390 px suite: 10/10 pass.
+- `npm run test:live`: pass, including three concurrent 120-song capacity trials.
+- Independent single-client capacity run: 120 accepted and persisted; request 121 returned 429 with `Retry-After: 60`; test submissions were deleted.
+- Fleet URL check: pass. Live Lighthouse: 97 performance / 100 accessibility / 100 best practices / 100 SEO; LCP 1.5 s, CLS 0.
+- Live request and response audit: same-origin only, no cookies, no console/page errors, expected security headers, API `no-store`.
+- PWA: active worker, clean update check, offline reload and offline edit/export pass.
+- Local/live parity: exact for main HTML, hashed JS/CSS, route script, service worker, legal pages, and 404.
+
+## Defects
+
+1. **High / release-blocking:** `src/style.css:117-118` renders the primary note tiles at 40×44 px with 4 px gaps on a 390 px phone. The supplied accessibility/design contract requires at least 44×44 px targets and 8 px separation. The header brand and several footer/legal links are also under 44 px.
+2. **Medium:** `public/staticwebapp.config.json:14-17` gives unversioned route, legal-style, and image files one-year immutable caching. Fingerprint them or make them revalidate.
+3. **Low:** `public/manifest.webmanifest:4` uses the banned and ambiguous phrase “local-first.”
+
+Full evidence and exact remediation are in `.factory/verification-13.md`; machine artifacts are in `.factory/evidence/verification-13/`.
+
+## Re-run
 
 ```sh
 npm ci
@@ -22,24 +41,8 @@ npm test
 npm run test:api
 npm run build
 npm run test:e2e
-```
-
-Run every exact command in `.factory/claims.json` individually for claim verification. Live verification is:
-
-```sh
 GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1
 npm run test:live
-/opt/fleet/lib/verify-url.sh https://gridsong.sociobot.in .factory/evidence/polish-3/live
+mkdir -p .factory/evidence/verification-13/verify-url
+/opt/fleet/lib/verify-url.sh https://gridsong.sociobot.in .factory/evidence/verification-13/verify-url
 ```
-
-## Evidence
-
-- Clean clone `/tmp/gridsong-polish-3-clean-8RRZF0` at the runtime repair commit: all 26 declared claim commands passed individually; `npm test` passed 16, `npm run test:api` passed 14, and build produced `dist/index.html`.
-- Local browser suite: 62 passed across desktop and 390px; Playwright Axe found zero violations on product, demo, legal, and 404 routes.
-- Live browser suite: 10 passed across desktop and 390px, including both demo exits, offline edit/save/WAV/MIDI, route focus, gallery disclosure, 404, and real teacher/student submission.
-- `npm run test:live` passed live API smoke, complete gallery flow, and three 120-song atomic-capacity trials.
-- Local Lighthouse: 99 performance / 100 accessibility / 100 best practices / 100 SEO. Live Lighthouse: 100 / 100 / 100 / 100. Full reports and screenshots are in `.factory/evidence/polish-3/`.
-
-## Known gaps
-
-None.
