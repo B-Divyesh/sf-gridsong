@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
+    "pretest:api": "npm --prefix api ci --ignore-scripts",
     "test:api": "npm --prefix api run test --",
     "test:e2e": "playwright test",
     "test:live": "node scripts/live-api-smoke.mjs && node scripts/live-gallery-flow.mjs && node scripts/live-gallery-capacity.mjs"

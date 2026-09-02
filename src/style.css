@@ -43,7 +43,7 @@ a:hover { color: var(--paper); }
 .demo-banner[hidden] { display: none; }
 .demo-banner:not([hidden]) { position: sticky; z-index: 140; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1440px; margin: 0 auto; padding: 9px clamp(20px, 5vw, 72px); color: var(--ink); background: var(--mint); box-shadow: 0 4px 0 rgba(9,13,34,.22); font-size: .88rem; font-weight: 750; }
 .demo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.text-button { min-height: 32px; padding: 4px 8px; color: var(--ink); background: transparent; border: 1px solid rgba(9,13,34,.5); border-radius: 5px; font-weight: 800; cursor: pointer; }
+.text-button { min-height: 44px; padding: 10px 12px; color: var(--ink); background: transparent; border: 1px solid rgba(9,13,34,.5); border-radius: 5px; font-weight: 800; line-height: 1.2; cursor: pointer; }
 .text-button:hover { background: rgba(255,247,222,.55); }
 
 main { overflow: clip; }

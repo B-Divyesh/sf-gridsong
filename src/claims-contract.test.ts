@@ -22,6 +22,15 @@ function claimMarkers(path: string): string[] {
 }
 
 describe('documentation claim contract', () => {
+  it('makes API claim commands install their package dependencies', () => {
+    const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+      scripts?: Record<string, string>;
+    };
+
+    expect(packageJson.scripts?.['pretest:api']).toBe('npm --prefix api ci --ignore-scripts');
+    expect(packageJson.scripts?.['test:api']).toBe('npm --prefix api run test --');
+  });
+
   it('@claim:documentation-claims-inventory inventories every marked README, Privacy, and Terms product claim', () => {
     const claims = JSON.parse(readFileSync(join(root, '.factory/claims.json'), 'utf8')) as Claim[];
     const markers = documentPaths.flatMap(claimMarkers);

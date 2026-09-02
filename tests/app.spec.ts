@@ -41,6 +41,24 @@ test('puts the teacher audience and sample action on the cold first screen', asy
   await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
 });
 
+test('demo banner actions have 44px targets and visible keyboard focus', async ({ page }) => {
+  await page.goto('/demo#composer');
+  for (const name of ['Reset demo', 'Start for real']) {
+    const action = page.getByRole('button', { name });
+    const box = await action.boundingBox();
+    expect(box, `${name} must have a rendered hit area`).not.toBeNull();
+    expect(box!.height, `${name} must be at least 44px high`).toBeGreaterThanOrEqual(44);
+    await action.focus();
+    await expect(action).toBeFocused();
+    const focus = await action.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { outlineStyle: style.outlineStyle, outlineWidth: parseFloat(style.outlineWidth) };
+    });
+    expect(focus.outlineStyle).not.toBe('none');
+    expect(focus.outlineWidth).toBeGreaterThanOrEqual(3);
+  }
+});
+
 test('@claim:demo-sandbox keeps the sample out of real-song storage and can reset it', async ({ page }) => {
   await page.goto('/');
   const first = page.locator('.note-cell').first();
