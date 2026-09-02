@@ -44,7 +44,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <span><strong>Demo</strong> — sample data, nothing is saved</span>
     <span class="demo-actions"><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span>
   </div>
-  <main>
+  <main id="main" tabindex="-1">
     <section class="intro" aria-labelledby="page-title">
       <div class="intro-copy">
         <p class="eyebrow">Classroom step sequencer</p>
@@ -120,14 +120,14 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
     <section class="classroom" aria-labelledby="classroom-title">
       <div><p class="eyebrow">Class gallery</p><h2 id="classroom-title">Collect songs for the class</h2><p>Make a class board, share its student link, and let students send a nickname and song straight to the projector. No accounts or email addresses.</p><button class="button primary" id="open-gallery-bottom" type="button">Open class gallery</button></div>
-      <ol class="class-steps"><li><span>01</span><strong>Teacher shares a class link</strong><small>It opens on every student device.</small></li><li><span>02</span><strong>Students submit a song</strong><small>Nickname and song only.</small></li><li><span>03</span><strong>Projector collects</strong><small>Play and celebrate together.</small></li></ol>
+      <ol class="class-steps"><li><span>01</span><strong>Teacher shares a class link</strong><small>It opens on every student device.</small></li><li><span>02</span><strong>Students submit a song</strong><small>Only the nickname and song are sent.</small></li><li><span>03</span><strong>Projector collects</strong><small>Play and celebrate together.</small></li></ol>
     </section>
   </main>
 
   <footer>
     <div><a class="brand footer-brand" href="/">Gridsong</a><p>Local-first classroom music. No accounts, ads, or tracking.</p></div>
     <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav>
-    <p class="credit">Original synths and generated illustration. Built by the Param Factory.</p>
+    <p class="credit">Built by the Param Factory · Gridsong v1.0.0</p>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

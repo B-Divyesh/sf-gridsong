@@ -2,7 +2,7 @@
 
 ## Entry point
 
-Open `/demo` or `/?demo=1`. The landing action points to `/demo#composer` so
+Open `/?demo=1` or `/demo`. The landing action points to `/demo#composer` so
 the four-bar sample opens directly at the working grid.
 
 ## Shipped sample

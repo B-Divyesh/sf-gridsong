@@ -49,6 +49,13 @@
     "sandbox": "two fresh browser contexts and a same-origin gallery service fixture; assert pass → direct submit → teacher poll with no ticket pasting"
   },
   {
+    "id": "gallery-submission-data",
+    "claim": "Only the class pass, nickname, and song are sent with a gallery submission.",
+    "where": "class-gallery steps, privacy page, README",
+    "test": "npm run test:e2e -- --grep @claim:gallery-submission-data",
+    "sandbox": "fresh browser context and same-origin gallery fixture; intercept the client submission and assert its JSON keys are exactly submitKey, nickname, and song"
+  },
+  {
     "id": "gallery-retention",
     "claim": "Class boards close after 90 days.",
     "where": "class-gallery dialog, README, privacy page, terms",

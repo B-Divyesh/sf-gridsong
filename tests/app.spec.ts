@@ -14,11 +14,24 @@ test('loads without console errors and passes accessibility scan', async ({ page
   expect(errors).toEqual([]);
 });
 
+test('skip link moves keyboard focus to the main content', async ({ page }) => {
+  await page.goto('/');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.skip-link')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
+});
+
 test('puts the teacher audience and sample action on the cold first screen', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make classroom songs together');
   await expect(page.getByText(/For K–8 music teachers and students/)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo#composer');
+  const banner = page.locator('#demo-banner');
+  await expect(banner).toBeHidden();
+  expect(await banner.evaluate(element => ({ display: getComputedStyle(element).display, height: element.getBoundingClientRect().height }))).toEqual({ display: 'none', height: 0 });
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Reset demo' })).toBeHidden();
 });
 
 test('@claim:demo-sandbox keeps the sample out of real-song storage and can reset it', async ({ page }) => {
@@ -45,6 +58,12 @@ test('@claim:demo-sandbox keeps the sample out of real-song storage and can rese
 
   await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
   await expect(page.getByText('This sample stays on this device.')).toBeVisible();
+
+  await page.goto('/?demo=1#composer');
+  await expect(page).toHaveTitle('Demo — Gridsong');
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
+  expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
 });
 
 test('@claim:local-save creates and restores a demo song without touching real storage', async ({ page }) => {
@@ -155,6 +174,58 @@ test('@claim:gallery-direct-submit student submits directly to the teacher galle
   expired = true;
   await page.waitForTimeout(5_100);
   await expect(page.getByText('This class gallery has closed.')).toBeVisible();
+});
+
+test('@claim:gallery-submission-data sends only the class pass, nickname, and song', async ({ page }) => {
+  let submitted: unknown;
+  await page.route('**/api/**', async route => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const response = (status: number, body: unknown) => route.fulfill({
+      status,
+      contentType: 'application/json',
+      headers: { 'cache-control': 'no-store' },
+      body: JSON.stringify(body)
+    });
+    if (request.method() === 'POST' && url.pathname === '/api/galleries') {
+      return response(201, {
+        id: '12345678-1234-4234-9234-123456789abc',
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 90 * 86_400_000,
+        teacherKey: 'teacher-key-0123456789_abcdef0123456789',
+        studentKey: 'student-key-0123456789_abcdef0123456789',
+        entries: []
+      });
+    }
+    if (request.method() === 'POST' && url.pathname.endsWith('/submissions')) {
+      submitted = request.postDataJSON();
+      return response(201, { ok: true });
+    }
+    if (request.method() === 'GET') {
+      return response(200, {
+        id: '12345678-1234-4234-9234-123456789abc',
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 90 * 86_400_000,
+        entries: []
+      });
+    }
+    return response(404, { error: 'Not found' });
+  });
+
+  await page.goto('/');
+  await page.locator('.note-cell').first().click();
+  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('button', { name: 'Create class board' }).click();
+  await page.getByText('Add this device’s song to the board').click();
+  await page.getByLabel('Nickname or label').fill('Blue Fox');
+  await page.getByRole('button', { name: 'Add to board' }).click();
+  await expect.poll(() => submitted).toBeTruthy();
+  expect(Object.keys(submitted as Record<string, unknown>).sort()).toEqual(['nickname', 'song', 'submitKey']);
+  expect(submitted).toEqual(expect.objectContaining({
+    nickname: 'Blue Fox',
+    submitKey: 'student-key-0123456789_abcdef0123456789',
+    song: expect.stringMatching(/^GS2S\./)
+  }));
 });
 
 test('@claim:offline-reload opens the cached demo composer shell while offline', async ({ browser }) => {

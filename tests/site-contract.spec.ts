@@ -52,6 +52,24 @@ test('published routes expose canonical and social metadata with a 1200 by 630 i
   expect(appleIcon).toEqual({ width: 180, height: 180 });
 });
 
+test('legal routes use the shared navigation and move skip-link focus to main', async ({ page }) => {
+  for (const route of ['/privacy/', '/terms/']) {
+    await page.goto(route);
+    await expect(page.locator('h1')).toHaveCount(1);
+    await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Try sample' })).toHaveAttribute('href', '/demo#composer');
+    await expect(page.getByRole('link', { name: 'Make music' })).toHaveAttribute('href', '/#composer');
+    await expect(page.getByRole('navigation', { name: 'Footer' })).toBeVisible();
+    await expect(page.getByText(/Gridsong · Local-first classroom music · v1\.0\.0/)).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('.skip-link')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('main')).toBeFocused();
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    expect(results.violations).toEqual([]);
+  }
+});
+
 test('Static Web Apps preserves 404 status while serving the 404 document', async ({}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   const config = JSON.parse(readFileSync('public/staticwebapp.config.json', 'utf8')) as {

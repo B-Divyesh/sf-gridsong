@@ -1,30 +1,30 @@
 # Gridsong
 
-Gridsong is a local-first classroom step sequencer for K–8 music lessons. Students compose on a simple colour grid, save the complete song in a link, export WAV or MIDI, and submit a nickname-only song directly to a teacher’s class gallery. No accounts, ads, or tracking.
+Gridsong is a classroom step sequencer for K–8 music lessons. Students make songs on a colour grid. They can save a link, export WAV or MIDI, or send a nickname-only song to the class gallery. No accounts, ads, or tracking.
 
 Live: <https://gridsong.sociobot.in>
 
 ## What it includes
 
-- Major, minor, pentatonic, and chromatic scales across 1–4 octaves
-- 1–64 bars at 50–200 BPM, shown one accessible bar at a time
-- Four original Web Audio synth patches plus synthesized kick and clap
-- Local autosave and compact, lossless URL song state (including the full 64-bar, four-octave grid)
-- Client-side WAV and standard MIDI export
-- 90-day server-backed teacher boards, portable submit-only student class passes, and projector polling
-- Keyboard editing, a 390px phone layout, reduced-motion behavior, and offline shell caching
+- Choose major, minor, pentatonic, or chromatic scales across one to four octaves.
+- Make one to 64 bars at 50–200 BPM, one clear bar at a time.
+- Choose four melody sounds, plus kick and clap.
+- Your song saves on this device and in a copied song link.
+- Export your song as a WAV or MIDI file.
+- Teachers can share a class link that closes after 90 days.
+- Use the grid by keyboard or on a phone. The composer works offline after its first visit.
 
 ## Try the sample safely
 
-Open <https://gridsong.sociobot.in/demo> or choose **Try it with sample data** on the first screen. The demo starts with a four-bar call-and-response. It stores its edits only under the `demo:gridsong.*` browser-storage namespace. The persistent **Demo — sample data, nothing is saved** banner offers **Reset demo** and **Start for real**. Start for real opens a fresh composer and never reads demo storage.
+Open <https://gridsong.sociobot.in/?demo=1> or choose **Try it with sample data** on the first screen. The demo starts with a four-bar call-and-response. It keeps demo edits apart from your real song. The persistent **Demo — sample data, nothing is saved** banner offers **Reset demo** and **Start for real**. Start for real opens a fresh composer and never reads demo data.
 
 ## Classroom gallery, across devices
 
-The teacher creates a board on the projector/device and copies its **student class pass**. The pass is a self-contained URL that works on any student device. It carries an unguessable, submit-only capability: it cannot read the board. A student opens it, composes, enters a short classroom nickname, and presses **Send to class gallery**. The projector checks for new submissions every five seconds while the board is open; no teacher ticket-pasting step is involved.
+The teacher creates a board on the projector and copies its **student class pass**. The link works on any student device. Students can send songs with it, but cannot see the board. A student opens it, composes, enters a classroom nickname, and presses **Send to class gallery**. New songs appear on the open projector board.
 
-The teacher key is a separate unguessable capability held only in the teacher browser’s local storage. The gallery service stores only nickname, compact song data, timestamps, and hashed capabilities. It enforces small requests, nickname/song validation, a storage-enforced 120-song gallery limit, and 90-day expiration. The API rejects expired boards immediately and removes expired records in bounded batches whenever a teacher creates a new board.
+The teacher key stays in the teacher’s browser. The gallery stores the nickname, song, submission time, and security data. Each board accepts 120 songs and closes after 90 days.
 
-## Develop
+## Develop and deploy
 
 Requires Node.js 22+.
 

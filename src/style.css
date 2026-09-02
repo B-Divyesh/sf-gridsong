@@ -40,12 +40,15 @@ a:hover { color: var(--paper); }
 .site-header nav a, .nav-button { color: var(--muted); font-weight: 700; text-decoration: none; }
 .nav-button { min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; }
 .site-header nav a:hover, .nav-button:hover { color: var(--paper); }
-.demo-banner { position: sticky; z-index: 140; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1440px; margin: 0 auto; padding: 9px clamp(20px, 5vw, 72px); color: var(--ink); background: var(--mint); box-shadow: 0 4px 0 rgba(9,13,34,.22); font-size: .88rem; font-weight: 750; }
+.demo-banner[hidden] { display: none; }
+.demo-banner:not([hidden]) { position: sticky; z-index: 140; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1440px; margin: 0 auto; padding: 9px clamp(20px, 5vw, 72px); color: var(--ink); background: var(--mint); box-shadow: 0 4px 0 rgba(9,13,34,.22); font-size: .88rem; font-weight: 750; }
 .demo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .text-button { min-height: 32px; padding: 4px 8px; color: var(--ink); background: transparent; border: 1px solid rgba(9,13,34,.5); border-radius: 5px; font-weight: 800; cursor: pointer; }
 .text-button:hover { background: rgba(255,247,222,.55); }
 
 main { overflow: clip; }
+main:focus { outline: none; }
+main:focus-visible { outline: 3px solid var(--mango); outline-offset: -5px; }
 .intro { position: relative; display: grid; grid-template-columns: minmax(0, .86fr) minmax(420px, 1.14fr); align-items: center; gap: clamp(32px, 6vw, 96px); max-width: 1440px; min-height: 650px; margin: 0 auto; padding: 56px clamp(20px, 5vw, 72px) 112px; }
 .intro::before { content: ""; position: absolute; top: 22%; left: -5%; width: 230px; height: 230px; background: radial-gradient(circle, rgba(255,200,87,.13), transparent 70%); pointer-events: none; }
 .eyebrow { margin: 0 0 12px; color: var(--mango); font-size: .78rem; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
