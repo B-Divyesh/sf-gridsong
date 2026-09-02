@@ -1,4 +1,60 @@
-# Gridsong polish round 2 handoff
+# Gridsong verification 11 handoff — **FAIL**
+
+**Tested candidate:** `5c91bec2b022378cf54eaed546ea19f36e91b163`
+**Live URL:** <https://gridsong.sociobot.in>
+**Verified:** 2026-09-02
+
+## Release outcome
+
+**FAIL. Do not release this candidate.** The product works end to end and the
+live artifact matches the candidate, but four mandatory claim commands fail
+from the clean root installation and the demo's visible reset/exit controls
+are only 32 px tall at mobile width.
+
+## Exact verification evidence
+
+- `.factory/claims.json` exists with 26 tests. After clean `npm ci`, 22 passed
+  individually and four API claims failed because `api/node_modules` was not
+  installed (`Cannot find module '@azure/functions'`):
+  `student-pass-submit-only`, `gallery-record-schema`,
+  `gallery-expiry-cleanup`, and `gallery-capacity`.
+- After the additional `npm --prefix api ci`, `npm test` passed (15/15),
+  `npm run test:api` passed (14/14), `npm run build` passed, and
+  `npm run test:e2e` passed (48 passed, 12 deployment-only skipped).
+- Live `npm run test:live` passed malformed-request handling, teacher →
+  student → projector → teacher-delete flow, and three concurrent capacity
+  trials. A fresh check observed 120 submissions accepted and the 121st
+  refused with `429 Retry-After: 60`; verifier entries were deleted.
+- Live and fresh local build hashes match for `index.html`, JS, CSS, and
+  service worker. The live demo has same-origin requests only, no console/page
+  errors, working offline reload, and zero serious/critical axe findings at
+  desktop and 390 px.
+
+## Required fixes before re-verification
+
+1. Make the canonical root clean-install/test workflow install the API
+   package, or make each API claim command self-sufficient. Then run every
+   `.factory/claims.json` command from a clean checkout with no failures.
+2. Make **Reset demo** and **Start for real** at least 44 px tall/hittable on
+   desktop and 390 px mobile; preserve visible keyboard focus.
+
+## How to verify after repair
+
+```sh
+npm ci
+npm --prefix api ci
+npm test
+npm run test:api
+npm run test:e2e
+npm run build
+npm run test:live
+```
+
+See `.factory/verification-11.md` for the full independent report.
+
+---
+
+# Previous builder handoff (superseded by verification 11)
 
 ## Outcome
 
