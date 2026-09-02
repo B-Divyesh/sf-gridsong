@@ -21,7 +21,7 @@ Repaired from candidate `047f912a5e5a533b10c061fe35c6829d77080e9e` against `.fac
 
 - `npm test`: 15 passed.
 - `npm run test:api`: 14 passed.
-- `npm run test:e2e`: 48 passed across desktop and 390 px; 10 deployment-only checks skipped without `GRIDSONG_LIVE_URL`.
+- `npm run test:e2e`: 48 passed across desktop and 390 px; 12 deployment-only checks skipped without `GRIDSONG_LIVE_URL`.
 - `npm run build`: passed; `dist/` contains 38.62 KB JavaScript (12.91 KB gzip) and 17.81 KB CSS (4.85 KB gzip).
 - `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4174 .factory/evidence/polish-2/local`: HTTP 200; title, language, h1, main, image alternative, labelled buttons, and console checks passed.
 - Lighthouse mobile: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.8 s, CLS 0, TBT 10 ms.
@@ -37,4 +37,22 @@ Repaired from candidate `047f912a5e5a533b10c061fe35c6829d77080e9e` against `.fac
 - `.factory/evidence/polish-2/local/demo-desktop.png`
 - `.factory/evidence/polish-2/local/privacy-desktop.png`
 
-Production evidence is recorded in `.factory/handoff.md` after deployment.
+## Production acceptance evidence
+
+- `GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1`: 10 passed across desktop and 390 px. This includes the cumulative round-1 checks, every round-2 header/copy/focus check, Axe, offline reload, 404 recovery, and a two-browser gallery flow.
+- `npm run test:live`: malformed API input, create → submit → read → delete, and three atomic 120-song capacity trials passed.
+- `/opt/fleet/lib/verify-url.sh https://gridsong.sociobot.in .factory/evidence/polish-2/live`: HTTP 200 and no console errors.
+- Live Lighthouse mobile: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.4 s, CLS 0, TBT 30 ms.
+- Live mobile/desktop audit: one-click sample action stayed inside both first screens; `/` hid the demo banner; `/?demo=1#composer` showed it with 48 notes; no horizontal overflow or third-party request origins appeared.
+- `/`, `/demo`, `/privacy/`, and `/terms/` returned 200 with route titles. `/not-found-polish-2` returned the designed 404. Every route exposed the same four header destinations and grid-mark wordmark.
+- Production parity: the built JS, CSS, and service-worker hashes match their live responses. Exact hashes are in `.factory/evidence/polish-2/live/hashes.txt`.
+
+Live screenshots:
+
+- `.factory/evidence/polish-2/live/home-mobile.png`
+- `.factory/evidence/polish-2/live/home-desktop.png`
+- `.factory/evidence/polish-2/live/demo-mobile.png`
+- `.factory/evidence/polish-2/live/demo-desktop.png`
+- `.factory/evidence/polish-2/live/privacy-desktop.png`
+- `.factory/evidence/polish-2/live/terms-desktop.png`
+- `.factory/evidence/polish-2/live/404-desktop.png`

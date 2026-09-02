@@ -42,6 +42,45 @@ test('deployed polish findings stay fixed on cold routes', async ({ browser }, t
   }
 });
 
+test('deployed round-two copy, header, gallery route, and focus fixes hold', async ({ page }) => {
+  test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
+  const expected = [
+    { name: 'Try sample', href: '/demo#composer' },
+    { name: 'Make music', href: '/#composer' },
+    { name: 'Open class gallery', href: '/#class-gallery' },
+    { name: 'Privacy', href: '/privacy/' }
+  ];
+
+  for (const route of ['/', '/demo', '/privacy/', '/terms/', `/not-found-${Date.now()}`]) {
+    await page.goto(`${liveOrigin}${route}`);
+    const primary = page.getByRole('navigation', { name: 'Primary' });
+    const links = await primary.locator('a').evaluateAll(items => items.map(item => ({
+      name: item.textContent?.trim(), href: item.getAttribute('href')
+    })));
+    expect(links).toEqual(expected);
+    await expect(page.getByRole('link', { name: 'Gridsong home' }).locator('svg')).toHaveCount(1);
+  }
+
+  await page.goto(liveOrigin!);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make and play songs on a classroom grid');
+  await expect(page.getByRole('button', { name: 'Start new song' })).toBeVisible();
+  const copy = await page.locator('body').innerText();
+  for (const removed of ['every student device', 'student class link', 'Classroom loop', 'Paint melody with', 'Play and celebrate together', 'Local-first classroom music']) {
+    expect(copy).not.toContain(removed);
+  }
+
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Privacy' }).click();
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Privacy, in plain language loaded');
+  await page.goBack();
+  await expect(page.locator('h1')).toBeFocused();
+
+  await page.goto(`${liveOrigin}/privacy/`);
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Open class gallery' }).click();
+  await expect(page).toHaveURL(/\/#class-gallery$/);
+  await expect(page.getByRole('dialog', { name: 'Class gallery' })).toBeVisible();
+});
+
 test('deployed unknown URL returns the accessible 404 and recovers home', async ({ page }) => {
   test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
   const response = await page.goto(`${liveOrigin}/no-such-page?browser-check=${Date.now()}`);

@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-09-02T04:09:06Z",
+  "origin": "https://gridsong.sociobot.in",
+  "desktop": {
+    "viewport": "1440x900",
+    "sampleActionBottomPx": 791.265625,
+    "pageWidthPx": 1440,
+    "demoBannerOnRealRoute": "none",
+    "demoBannerOnDemoRoute": "flex",
+    "demoNoteCount": 48,
+    "consoleErrors": 0
+  },
+  "mobile": {
+    "viewport": "390x844",
+    "sampleActionBottomPx": 629.03125,
+    "pageWidthPx": 390,
+    "demoBannerOnRealRoute": "none",
+    "demoBannerOnDemoRoute": "flex",
+    "demoNoteCount": 48,
+    "consoleErrors": 0
+  },
+  "requestOrigins": ["https://gridsong.sociobot.in"],
+  "routes": {
+    "/": { "status": 200, "title": "Gridsong — Classroom step sequencer" },
+    "/demo": { "status": 200, "title": "Demo — Gridsong" },
+    "/privacy/": { "status": 200, "title": "Privacy — Gridsong" },
+    "/terms/": { "status": 200, "title": "Terms — Gridsong" },
+    "/not-found-polish-2": { "status": 404, "title": "Page not found — Gridsong" }
+  }
+}
