@@ -35,11 +35,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </a>
     <nav aria-label="Primary">
       <a href="/demo#composer">Try sample</a>
-      <a href="#composer">Make music</a>
-      <button class="nav-button" id="open-gallery" type="button">Class gallery</button>
+      <a href="/#composer">Make music</a>
+      <a href="/#class-gallery" id="open-gallery">Open class gallery</a>
       <a href="/privacy/">Privacy</a>
     </nav>
   </header>
+  <div class="sr-only" id="route-status" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="demo-banner" id="demo-banner" role="status" aria-live="polite" hidden>
     <span><strong>Demo</strong> — sample data, nothing is saved</span>
     <span class="demo-actions"><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span>
@@ -48,8 +49,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <section class="intro" aria-labelledby="page-title">
       <div class="intro-copy">
         <p class="eyebrow">Classroom step sequencer</p>
-        <h1 id="page-title">Make classroom songs together</h1>
-        <p>For K–8 music teachers and students who need a simple way to compose, save, share, and hear songs.</p>
+        <h1 id="page-title" tabindex="-1">Make and play songs on a classroom grid</h1>
+        <p>For K–8 music teachers and students who want to compose, save, share, and hear their songs.</p>
         <div class="intro-actions"><a class="button primary" href="/demo#composer">Try it with sample data</a><span>Opens a four-bar rhythm in a private demo.</span></div>
         <ul class="plain-facts"><li>Saves songs on this device</li><li>Exports WAV or MIDI</li><li>No account, ads, or tracking</li></ul>
       </div>
@@ -84,7 +85,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </div>
 
       <div class="voice-picker" role="group" aria-labelledby="voice-heading">
-        <div><p id="voice-heading" class="field-label">Paint melody with</p><p class="hint">Pick a sound, then light notes below.</p></div>
+        <div><p id="voice-heading" class="field-label">Choose a melody sound</p><p class="hint">Choose a sound, then turn on notes below.</p></div>
         <div class="voice-buttons">
           <button type="button" class="voice active" data-voice="lantern" aria-pressed="true"><span class="swatch v-lantern"></span>Lantern</button>
           <button type="button" class="voice" data-voice="reed" aria-pressed="false"><span class="swatch v-reed"></span>Reed</button>
@@ -113,19 +114,19 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <button class="button primary" id="share" type="button">Copy song link</button>
           <button class="button secondary" id="export-wav" type="button">Export WAV</button>
           <button class="button secondary" id="export-midi" type="button">Export MIDI</button>
-          <button class="button quiet" id="new-song" type="button">New song</button>
+          <button class="button quiet" id="new-song" type="button">Start new song</button>
         </div>
       </div>
     </section>
 
-    <section class="classroom" aria-labelledby="classroom-title">
-      <div><p class="eyebrow">Class gallery</p><h2 id="classroom-title">Collect songs for the class</h2><p>Make a class board, share its student link, and let students send a nickname and song straight to the projector. No accounts or email addresses.</p><button class="button primary" id="open-gallery-bottom" type="button">Open class gallery</button></div>
-      <ol class="class-steps"><li><span>01</span><strong>Teacher shares a class link</strong><small>It opens on every student device.</small></li><li><span>02</span><strong>Students submit a song</strong><small>Only the nickname and song are sent.</small></li><li><span>03</span><strong>Projector collects</strong><small>Play and celebrate together.</small></li></ol>
+    <section class="classroom" id="class-gallery" aria-labelledby="classroom-title">
+      <div><p class="eyebrow">Class gallery</p><h2 id="classroom-title">Collect songs for the class</h2><p>Make a class board and share its student class pass. Students send a classroom nickname and song straight to the projector. No accounts or email addresses.</p><button class="button primary" id="open-gallery-bottom" type="button">Open class gallery</button></div>
+      <ol class="class-steps"><li><span>01</span><strong>Teacher shares a student class pass</strong><small>Students can open it on another device.</small></li><li><span>02</span><strong>Students submit a song</strong><small>Only the student class pass, nickname, and song are sent.</small></li><li><span>03</span><strong>Projector collects songs</strong><small>Play submitted songs for the class.</small></li></ol>
     </section>
   </main>
 
   <footer>
-    <div><a class="brand footer-brand" href="/">Gridsong</a><p>Local-first classroom music. No accounts, ads, or tracking.</p></div>
+    <div><a class="brand footer-brand" href="/">Gridsong</a><p>Songs stay on this device until you share them. No accounts, ads, or tracking.</p></div>
     <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav>
     <p class="credit">Built by the Param Factory · Gridsong v1.0.0</p>
   </footer>
@@ -134,9 +135,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="offline-banner" id="offline-banner" role="status" hidden>You’re offline — composing, local saves, and exports still work.</div>
 
   <dialog id="gallery-dialog" aria-labelledby="gallery-title">
-    <div class="dialog-header"><div><p class="eyebrow">Classroom loop</p><h2 id="gallery-title">Class gallery</h2></div><button class="icon-button" id="close-gallery" type="button" aria-label="Close gallery">×</button></div>
+    <div class="dialog-header"><div><p class="eyebrow">Class gallery setup</p><h2 id="gallery-title">Class gallery</h2></div><button class="icon-button" id="close-gallery" type="button" aria-label="Close gallery">×</button></div>
     <div id="gallery-start">
-      <p>Create a 90-day board on the teacher device. You will get a shareable student class link; submissions arrive here automatically.</p>
+      <p>Create a 90-day board on the teacher device. You will get a student class pass. New submissions appear here automatically.</p>
       <button class="button primary" id="create-gallery" type="button">Create class board</button>
       <p class="privacy-note">The gallery keeps only nickname and song data for 90 days. There are no accounts, email addresses, or student gallery browsing.</p>
     </div>
@@ -145,15 +146,15 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <button class="button primary" id="start-real-gallery" type="button">Start for real</button>
     </div>
     <div id="gallery-board" hidden>
-      <div class="code-ticket"><span>Student class pass</span><strong id="gallery-pass-status">Ready to share</strong><button class="button quiet" id="copy-pass" type="button">Copy student pass</button></div>
-      <p class="privacy-note">Share the pass. Students open it, choose a nickname, and submit their song directly to this board. New songs check in automatically while this window is open.</p>
+      <div class="code-ticket"><span>Student class pass</span><strong id="gallery-pass-status">Ready to share</strong><button class="button quiet" id="copy-pass" type="button">Copy student class pass</button></div>
+      <p class="privacy-note">Share the student class pass. Students open it, choose a nickname, and submit their song directly to this board. New songs check in automatically while this window is open.</p>
       <details class="student-submit"><summary>Add this device’s song to the board</summary><label for="board-nickname">Nickname or label</label><div class="submit-row"><input id="board-nickname" maxlength="24" autocomplete="off"><button class="button primary" id="add-local" type="button">Add to board</button></div></details>
       <div class="gallery-list-heading"><h3>Submissions</h3><span id="submission-count">0 songs</span></div>
       <div id="gallery-list" class="gallery-list"></div>
     </div>
     <div id="gallery-student" hidden>
       <p class="student-pass-title"><strong>You opened a student class pass.</strong> Compose your song, add a classroom nickname, and send it to your teacher’s projector.</p>
-      <ol class="pass-steps"><li>This pass works across devices, but it does not show the teacher’s private board.</li><li>Use a classroom alias, not your full name.</li><li>Submit once you have at least one note. Your teacher will see it on the board.</li></ol>
+      <ol class="pass-steps"><li>This pass can send a song from another device. It does not show the teacher’s private board.</li><li>Use a classroom alias, not your full name.</li><li>Submit once you have at least one note. Your teacher will see it on the board.</li></ol>
       <button class="button primary" id="student-compose" type="button">Start composing</button>
       <details class="student-submit" open><summary>Send my song</summary><label for="student-nickname">Student nickname</label><div class="submit-row"><input id="student-nickname" maxlength="24" autocomplete="off"><button class="button primary" id="submit-student-song" type="button">Send to class gallery</button></div><p class="hint">Your nickname and song are kept for 90 days. Use an alias, not your full name.</p></details>
     </div>
@@ -320,7 +321,7 @@ function focusFirstNote(): void {
 }
 
 get<HTMLButtonElement>('play').addEventListener('click', async () => {
-  if (!song.notes.length) { showToast('Light at least one note before playing.'); focusFirstNote(); return; }
+  if (!song.notes.length) { showToast('Turn on at least one note before playing.'); focusFirstNote(); return; }
   try {
     await player.start(song, step => {
       playStep = step;
@@ -472,7 +473,7 @@ function activateGalleryFromHash(): string | null {
     classInvite = invite;
     if (invite) activeGallery = null;
     return null;
-  } catch (error) { return error instanceof Error ? error.message : 'That class pass could not be opened.'; }
+  } catch (error) { return error instanceof Error ? error.message : 'That student class pass could not be opened.'; }
 }
 
 async function refreshGallery(silent = false): Promise<void> {
@@ -495,8 +496,24 @@ async function openGallery(): Promise<void> {
   if (activeGallery && !galleryPoller) galleryPoller = window.setInterval(() => void refreshGallery(true), 5000);
 }
 
-[get('open-gallery'), get('open-gallery-bottom')].forEach(button => button.addEventListener('click', () => void openGallery()));
-function closeGallery(): void { galleryDialog.close(); if (galleryPoller) { clearInterval(galleryPoller); galleryPoller = 0; } }
+get<HTMLAnchorElement>('open-gallery').addEventListener('click', event => {
+  event.preventDefault();
+  if (!isDemo && !classInvite && !location.hash.startsWith('#song=') && location.hash !== '#class-gallery') {
+    history.pushState(null, '', '/#class-gallery');
+  }
+  void openGallery();
+});
+get<HTMLButtonElement>('open-gallery-bottom').addEventListener('click', () => {
+  if (!isDemo && !classInvite && !location.hash.startsWith('#song=') && location.hash !== '#class-gallery') {
+    history.pushState(null, '', '/#class-gallery');
+  }
+  void openGallery();
+});
+function closeGallery(): void {
+  galleryDialog.close();
+  if (location.hash === '#class-gallery') history.replaceState(null, '', '/');
+  if (galleryPoller) { clearInterval(galleryPoller); galleryPoller = 0; }
+}
 get<HTMLButtonElement>('close-gallery').addEventListener('click', closeGallery);
 galleryDialog.addEventListener('click', event => { if (event.target === galleryDialog) closeGallery(); });
 galleryDialog.addEventListener('close', () => { if (galleryPoller) { clearInterval(galleryPoller); galleryPoller = 0; } });
@@ -516,7 +533,7 @@ get<HTMLButtonElement>('create-gallery').addEventListener('click', async () => {
     saveTeacherAccess(activeGallery);
     renderGallery();
     if (!galleryPoller) galleryPoller = window.setInterval(() => void refreshGallery(true), 5000);
-    showToast('Class board created. Copy the student pass to invite students.');
+    showToast('Class board created. Copy the student class pass to invite students.');
   } catch (error) { showToast(error instanceof Error ? error.message : 'The class board could not be created.'); }
   finally { button.disabled = false; button.textContent = 'Create class board'; }
 });
@@ -574,7 +591,7 @@ function renderGallery(): void {
   if (!activeGallery.entries.length) {
     const empty = document.createElement('div');
     empty.className = 'empty-gallery';
-    empty.innerHTML = '<span aria-hidden="true">♫</span><strong>No songs submitted yet</strong><p>Share the student pass, then new songs will appear here.</p>';
+    empty.innerHTML = '<span aria-hidden="true">♫</span><strong>No songs submitted yet</strong><p>Share the student class pass, then new songs will appear here.</p>';
     list.append(empty);
     return;
   }
@@ -622,6 +639,7 @@ window.addEventListener('hashchange', () => {
     const linked = songFromHash(location.hash);
     if (linked) { stopPlayback(); song = linked; currentBar = 0; syncControls(); commit('Song opened from its link'); }
   } catch (error) { showToast(error instanceof Error ? error.message : 'This song link could not be opened.'); }
+  if (location.hash === '#class-gallery') void openGallery();
 });
 
 syncControls();
@@ -635,6 +653,7 @@ get<HTMLButtonElement>('start-real-gallery').addEventListener('click', startForR
 const initialPassError = activateGalleryFromHash();
 if (initialPassError) queueMicrotask(() => showToast(initialPassError));
 if (classInvite) queueMicrotask(() => void openGallery());
+if (location.hash === '#class-gallery') queueMicrotask(() => void openGallery());
 
 // The composer is rendered by this module after the browser has resolved an
 // incoming #composer anchor. Re-apply that anchor for the sample action so its

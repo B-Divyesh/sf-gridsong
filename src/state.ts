@@ -15,7 +15,7 @@ const SONG_PREFIX = 'GS2S.';
 const INVITE_PREFIX = 'GSP1.';
 
 export function blankSong(): Song {
-  return { v: 1, title: 'My night-market song', tempo: 112, bars: 4, octaves: 2, scale: 'major', notes: [] };
+  return { v: 1, title: 'My classroom song', tempo: 112, bars: 4, octaves: 2, scale: 'major', notes: [] };
 }
 
 export function melodicRows(song: Song): number {
@@ -180,15 +180,15 @@ function isGalleryId(value: unknown): value is string {
 
 export function galleryPass(galleryId: string, submitKey: string, expiresAt: number): string {
   if (!isGalleryId(galleryId)) throw new Error('This gallery identifier is not valid.');
-  if (typeof submitKey !== 'string' || !/^[a-z0-9_-]{32,128}$/i.test(submitKey) || !Number.isFinite(expiresAt)) throw new Error('This class pass is not valid.');
+  if (typeof submitKey !== 'string' || !/^[a-z0-9_-]{32,128}$/i.test(submitKey) || !Number.isFinite(expiresAt)) throw new Error('This student class pass is not valid.');
   return `${INVITE_PREFIX}${encode({ v: 1, galleryId, submitKey, expiresAt } satisfies GalleryInvite)}`;
 }
 
 export function galleryInviteFromPass(value: string): GalleryInvite {
-  if (!value.startsWith(INVITE_PREFIX)) throw new Error('That class pass is not valid.');
+  if (!value.startsWith(INVITE_PREFIX)) throw new Error('That student class pass is not valid.');
   const invite = decode<Partial<GalleryInvite>>(value.slice(INVITE_PREFIX.length));
-  if (invite.v !== 1 || !isGalleryId(invite.galleryId) || typeof invite.submitKey !== 'string' || !/^[a-z0-9_-]{32,128}$/i.test(invite.submitKey) || typeof invite.expiresAt !== 'number') throw new Error('That class pass is not valid.');
-  if (Date.now() > invite.expiresAt) throw new Error('That class pass has expired. Ask the teacher for a new one.');
+  if (invite.v !== 1 || !isGalleryId(invite.galleryId) || typeof invite.submitKey !== 'string' || !/^[a-z0-9_-]{32,128}$/i.test(invite.submitKey) || typeof invite.expiresAt !== 'number') throw new Error('That student class pass is not valid.');
+  if (Date.now() > invite.expiresAt) throw new Error('That student class pass has expired. Ask the teacher for a new one.');
   return { v: 1, galleryId: invite.galleryId, submitKey: invite.submitKey, expiresAt: invite.expiresAt };
 }
 

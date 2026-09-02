@@ -24,14 +24,21 @@ test('skip link moves keyboard focus to the main content', async ({ page }) => {
 
 test('puts the teacher audience and sample action on the cold first screen', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make classroom songs together');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make and play songs on a classroom grid');
   await expect(page.getByText(/For K–8 music teachers and students/)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo#composer');
+  const sampleAction = await page.getByRole('link', { name: 'Try it with sample data' }).boundingBox();
+  expect(sampleAction).not.toBeNull();
+  expect(sampleAction!.y + sampleAction!.height).toBeLessThanOrEqual(await page.evaluate(() => innerHeight));
   const banner = page.locator('#demo-banner');
   await expect(banner).toBeHidden();
   expect(await banner.evaluate(element => ({ display: getComputedStyle(element).display, height: element.getBoundingClientRect().height }))).toEqual({ display: 'none', height: 0 });
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Reset demo' })).toBeHidden();
+  await page.getByRole('link', { name: 'Try it with sample data' }).click();
+  await expect(page).toHaveURL(/\/demo#composer$/);
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await expect(page.getByLabel('Song title')).toHaveValue('Morning call and response');
 });
 
 test('@claim:demo-sandbox keeps the sample out of real-song storage and can reset it', async ({ page }) => {
@@ -56,7 +63,7 @@ test('@claim:demo-sandbox keeps the sample out of real-song storage and can rese
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('demo:gridsong.song.v1') ?? '{}').notes?.length)).toBe(48);
   expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
 
-  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
   await expect(page.getByText('This sample stays on this device.')).toBeVisible();
 
   await page.goto('/?demo=1#composer');
@@ -211,9 +218,9 @@ test('@claim:teacher-key-browser stores teacher access locally but excludes it f
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
   await page.getByRole('button', { name: 'Create class board' }).click();
-  await page.getByRole('button', { name: 'Copy student pass' }).click();
+  await page.getByRole('button', { name: 'Copy student class pass' }).click();
   const result = await page.evaluate(async () => {
     const copied = await navigator.clipboard.readText();
     const encoded = new URL(copied).hash.match(/gallery=(GSP1\.[^&]+)/)?.[1].slice(5) ?? '';
@@ -245,7 +252,7 @@ test('@claim:gallery-direct-submit student submits directly to the teacher galle
       }
       const gallery = galleries.get(match[1]);
       if (!gallery) return reply(404, { error: 'That class gallery was not found.' });
-      if (expired) return reply(410, { error: 'This class gallery has closed. Ask your teacher for a new class pass.' });
+      if (expired) return reply(410, { error: 'This class gallery has closed. Ask your teacher for a new student class pass.' });
       if (method === 'GET') return reply(200, gallery);
       if (method === 'POST' && !match[2]) {
         const submitted = route.request().postDataJSON() as { nickname: string; song: string; submitKey: string };
@@ -260,9 +267,9 @@ test('@claim:gallery-direct-submit student submits directly to the teacher galle
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
   await page.locator('.note-cell').first().click();
-  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
   await page.getByRole('button', { name: 'Create class board' }).click();
-  await page.getByRole('button', { name: 'Copy student pass' }).click();
+  await page.getByRole('button', { name: 'Copy student class pass' }).click();
   const classPass = await page.evaluate(() => navigator.clipboard.readText());
   expect(classPass).toContain('#gallery=GSP1.');
 
@@ -274,7 +281,7 @@ test('@claim:gallery-direct-submit student submits directly to the teacher galle
     await expect(student.getByText('You opened a student class pass.')).toBeVisible();
     await student.getByRole('button', { name: 'Start composing' }).click();
     await student.locator('.note-cell').first().click();
-    await student.getByRole('button', { name: 'Class gallery', exact: true }).click();
+    await student.getByRole('link', { name: 'Open class gallery', exact: true }).click();
     await student.getByLabel('Student nickname').fill('Blue Fox');
     await student.getByRole('button', { name: 'Send to class gallery' }).click();
     await expect(student.getByText('Song sent to the class gallery.')).toBeVisible();
@@ -329,7 +336,7 @@ test('@claim:gallery-submission-data sends only the class pass, nickname, and so
 
   await page.goto('/');
   await page.locator('.note-cell').first().click();
-  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
   await page.getByRole('button', { name: 'Create class board' }).click();
   await page.getByText('Add this device’s song to the board').click();
   await page.getByLabel('Nickname or label').fill('Blue Fox');
@@ -380,7 +387,7 @@ test('@claim:teacher-removes-submissions lets a teacher remove a submission with
   });
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
   await page.getByRole('button', { name: 'Create class board' }).click();
   await expect(page.getByText(/by Blue Fox/)).toBeVisible();
   page.once('dialog', dialog => dialog.accept());
@@ -425,7 +432,7 @@ test('@claim:privacy-local-demo @claim:privacy-technical-footprint makes no thir
   try {
     await page.goto('/demo#composer');
     await page.locator('.note-cell').first().click();
-    await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+    await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
     const origin = new URL(baseURL!).origin;
     expect(requests.every(url => new URL(url).origin === origin)).toBe(true);
     const resources = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.name));

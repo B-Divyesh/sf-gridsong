@@ -1,5 +1,5 @@
-const CACHE = 'gridsong-shell-v6';
-const SHELL = ['/404.html', '/apple-touch-icon.png', '/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/assets/night-market-grid.webp', '/assets/gridsong-social.jpg', '/privacy/', '/terms/'];
+const CACHE = 'gridsong-shell-v7';
+const SHELL = ['/404.html', '/apple-touch-icon.png', '/icon.svg', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/route-entry.js', '/assets/night-market-grid.webp', '/assets/gridsong-social.jpg', '/privacy/', '/terms/'];
 
 async function cacheShell() {
   const cache = await caches.open(CACHE);

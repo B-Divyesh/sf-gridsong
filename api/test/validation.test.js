@@ -143,7 +143,7 @@ test('@claim:gallery-expiry-cleanup rejects expired boards and deletes no more t
   const expiredId = '12345678-1234-4234-9234-123456789abc';
   const expired = await activeGallery({ getEntity: async () => ({ partitionKey: expiredId, expiresAt: 100 }) }, expiredId);
   assert.equal(expired.response.status, 410);
-  assert.equal(expired.response.jsonBody.error, 'This class gallery has closed. Ask your teacher for a new class pass.');
+  assert.equal(expired.response.jsonBody.error, 'This class gallery has closed. Ask your teacher for a new student class pass.');
 
   const deleted = [];
   let filter;
@@ -186,7 +186,7 @@ test('@claim:developer-runtime production deployment contract ships the Node 22 
   assert.equal(staticConfig.navigationFallback, undefined);
   assert.deepEqual(staticConfig.responseOverrides['404'], { rewrite: '/404.html' });
   assert.ok(staticConfig.routes.some(route => route.route === '/demo' && route.rewrite === '/index.html'));
-  assert.match(notFoundPage, /<h1>Page not found<\/h1>/);
+  assert.match(notFoundPage, /<h1[^>]*>Page not found<\/h1>/);
   assert.match(notFoundPage, /href="\/">Return to the composer<\/a>/);
   const serviceWorkerRoute = staticConfig.routes.find(route => route.route === '/sw.js');
   assert.equal(serviceWorkerRoute?.headers?.['Cache-Control'], 'no-cache');

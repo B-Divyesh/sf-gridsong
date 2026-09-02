@@ -24,21 +24,22 @@
 <body>
   <a class="skip-link" href="#main">Skip to privacy details</a>
   <header>
-    <a class="brand" href="/">Gridsong</a>
-    <nav aria-label="Primary"><a href="/demo#composer">Try sample</a><a href="/#composer">Make music</a><a href="/privacy/" aria-current="page">Privacy</a></nav>
+    <a class="brand" href="/" aria-label="Gridsong home"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 8h26v24H7z"/><path d="M13 15h5v5h-5zm9 0h5v5h-5zm-9 9h5v5h-5z"/></svg><span>Gridsong</span></a>
+    <nav aria-label="Primary"><a href="/demo#composer">Try sample</a><a href="/#composer">Make music</a><a href="/#class-gallery">Open class gallery</a><a href="/privacy/" aria-current="page">Privacy</a></nav>
   </header>
+  <div class="sr-only" id="route-status" role="status" aria-live="polite" aria-atomic="true"></div>
   <main id="main" tabindex="-1">
-    <h1>Privacy, in plain language</h1>
+    <h1 tabindex="-1">Privacy, in plain language</h1>
     <p data-claim="privacy-local-demo"><strong>Last updated: 2 September 2026.</strong> Gridsong is designed for classrooms and does not require an account to compose.</p>
     <h2>What stays on your device</h2>
     <p data-claim="local-save teacher-key-browser demo-sandbox browser-exports complete-song-links">Your current song and the teacher access key for the last class board are stored in that browser’s local storage. The sample demo uses separate keys beginning with <code>demo:gridsong.</code>, so it does not read or write your real song. Student compositions can also be saved as links or WAV/MIDI files on the device.</p>
-    <h2>What a class pass or song link contains</h2>
-    <p data-claim="student-pass-submit-only teacher-key-browser complete-song-links">A student class pass contains an opaque board reference, a submit-only key, and an expiry. It works on another device but cannot read the teacher’s private board. A song link carries the song title, notes, tempo, scale, length, and instrument choices in the URL itself.</p>
-    <p>Anyone who receives a pass or song link can use the capability or read the song data. Do not use full names or include sensitive information in song titles.</p>
+    <h2>What a student class pass or song link contains</h2>
+    <p data-claim="student-pass-submit-only teacher-key-browser complete-song-links">A student class pass contains a board ID, a key that can only send songs, and an expiry. It works on another device but cannot read the teacher’s private board. A song link carries the title, notes, tempo, scale, length, and sound choices in its address.</p>
+    <p>Anyone who receives a student class pass can send a song. Anyone with a song link can read its song data. Do not use full names or include sensitive information in song titles.</p>
     <h2>What the class gallery stores</h2>
-    <p data-claim="gallery-record-schema gallery-submission-data">When a student presses “Send to class gallery,” Gridsong stores the classroom nickname, composition, submission time, expiry, and security hashes needed to operate that board. The submission request contains only the nickname, composition, and submit capability.</p>
+    <p data-claim="gallery-record-schema gallery-submission-data">When a student sends a song, the gallery stores the nickname, song, submission time, expiry, and protected key checks. It never stores usable class or teacher keys. The request contains only the student class pass, nickname, and song.</p>
     <p data-claim="privacy-local-demo">The compose and gallery forms do not ask for email addresses or account credentials.</p>
-    <p data-claim="gallery-retention gallery-expiry-cleanup teacher-removes-submissions">Boards and their submissions expire after 90 days and are rejected immediately. Expired records are removed in bounded cleanup during later board creation. Teachers can remove a submission sooner.</p>
+    <p data-claim="gallery-retention gallery-expiry-cleanup teacher-removes-submissions">Boards and submissions close after 90 days. Expired records are deleted in small batches when a new board is created. Teachers can remove a submission sooner.</p>
     <h2>What we do not do</h2>
     <p data-claim="privacy-technical-footprint">The delivered app sets no cookies and loads no third-party fonts or scripts.</p>
     <h2>Children and schools</h2>
@@ -47,8 +48,9 @@
     <p>For privacy questions, contact the site operator through <a href="https://sociobot.in">sociobot.in</a>.</p>
   </main>
   <footer>
-    <span>Gridsong · Local-first classroom music · v1.0.0</span>
+    <span>Gridsong · Songs stay on this device until shared · v1.0.0</span>
     <nav class="footer-links" aria-label="Footer"><a href="/privacy/" aria-current="page">Privacy</a><a href="/terms/">Terms</a><a href="https://sociobot.in">Built by Param Factory</a></nav>
   </footer>
+  <script src="/route-entry.js" defer></script>
 </body>
 </html>

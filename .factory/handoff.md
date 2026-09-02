@@ -1,17 +1,46 @@
-# Gridsong adversarial review 2 — FAIL
+# Gridsong polish round 2 handoff
 
-Reviewed production at <https://gridsong.sociobot.in> against commit `047f912a5e5a533b10c061fe35c6829d77080e9e`. No product code was changed.
+## Outcome
 
-The full report is in `.factory/review-2.md`. It records two blocking findings and five minor findings. The blocking issues are a half-fixed earlier route-header inconsistency (F-1-6) and the untested absolute claim that a class pass opens on “every student device” (F-2-1).
+All findings in `.factory/review-1.md` and `.factory/review-2.md` are repaired in the release candidate. Gridsong keeps its night-market sequencer design and static-web deployment class.
 
-Verification completed:
+## What changed
 
-- all 26 `.factory/claims.json` commands passed individually from a detached clean worktree;
-- 13 unit tests and 14 API tests passed;
-- 42 local Playwright tests passed, with 10 intentional live-only skips;
-- all 8 live Playwright checks passed;
-- the production build completed and produced `dist/`;
-- live JS, CSS, and service-worker hashes matched the clean build;
-- the live link crawl, same-origin demo request check, storage-isolation/reset check, designed 404, and Axe checks passed.
+- Rewrote the first screen to say exactly what students do and kept the one-click sample action inside the initial 390×844 viewport.
+- Kept `/demo` and `/?demo=1` isolated under `demo:gridsong.*`, with a visible banner, reset, and return-to-real controls. Header gallery access now stays inside the active demo or student-pass context.
+- Made the app, demo, Privacy, Terms, and 404 headers share the same grid-mark wordmark and four link destinations.
+- Added real `/#class-gallery` routing that opens the gallery from legal and recovery pages.
+- Added route-entry h1 focus, polite announcements, and back/forward coverage without breaking skip links.
+- Replaced the absolute device claim with “Students can open it on another device.”
+- Standardized “student class pass,” changed noun-only actions to “Open class gallery” and “Start new song,” and removed the remaining reader-facing metaphor and security jargon.
+- Updated `.factory/claims.json`, the claim inventory test, catalog description, copy audit, README, Privacy, Terms, 404, and service-worker shell version.
+- Set Playwright to one worker because the supplied Chromium build became unstable after long concurrent test runs in this container; coverage and both viewport projects remain unchanged.
 
-Next work should address every finding in `.factory/review-2.md`, then repeat the full review from a clean browser and clean worktree.
+## Verification
+
+- `npm test`: 15 passed.
+- `npm run test:api`: 14 passed.
+- `npm run build`: passed and produced `dist/index.html`.
+- `npm run test:e2e`: 48 local checks passed; 10 live-only checks skipped until `GRIDSONG_LIVE_URL` is supplied.
+- Playwright Axe: zero WCAG A/AA/2.1 AA violations on the covered app, demo, legal, and 404 pages.
+- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4174 .factory/evidence/polish-2/local`: passed with no console errors.
+- Lighthouse mobile: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.8 s, CLS 0, TBT 10 ms.
+- Build sizes: JavaScript 38.62 KB raw / 12.91 KB gzip; CSS 17.81 KB raw / 4.85 KB gzip.
+- The 390 px first screen has no horizontal overflow; the sample action ends at 629 px in an 844 px viewport.
+- Every command in `.factory/claims.json` will be rerun individually from a clean clone of the committed repair before deployment.
+
+## Evidence and operation
+
+- Finding map: `.factory/polish-2.md`
+- Copy audit: `.factory/copy-audit.md`
+- Demo contract: `.factory/demo.md`
+- Local evidence: `.factory/evidence/polish-2/local/`
+- Production: <https://gridsong.sociobot.in>
+- Install: `npm ci && npm --prefix api ci`
+- Test: `npm test && npm run test:api && npm run test:e2e`
+- Build: `npm run build`
+- Deploy: `npx swa deploy production --env production`
+
+## Known gaps
+
+None in product scope. Production verification details are added after the deployment check.

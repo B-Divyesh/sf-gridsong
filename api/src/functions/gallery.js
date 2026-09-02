@@ -90,7 +90,7 @@ async function galleryFor(client, id) {
 async function activeGallery(client, id) {
   const gallery = await galleryFor(client, id);
   if (!gallery) return { gallery: null, response: fail(404, 'That class gallery was not found. Ask your teacher for a new pass.') };
-  if (Number(gallery.expiresAt) <= now()) return { gallery: null, response: fail(410, 'This class gallery has closed. Ask your teacher for a new class pass.') };
+  if (Number(gallery.expiresAt) <= now()) return { gallery: null, response: fail(410, 'This class gallery has closed. Ask your teacher for a new student class pass.') };
   return { gallery };
 }
 

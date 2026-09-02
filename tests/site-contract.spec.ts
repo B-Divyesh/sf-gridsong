@@ -16,7 +16,7 @@ test('@claim:unknown-route-recovery unknown URLs return the accessible product 4
   expect(results.violations).toEqual([]);
 
   await page.getByRole('link', { name: 'Return to the composer' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make classroom songs together');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make and play songs on a classroom grid');
 });
 
 test('published routes expose canonical and social metadata with a 1200 by 630 image', async ({ page }) => {
@@ -52,15 +52,32 @@ test('published routes expose canonical and social metadata with a 1200 by 630 i
   expect(appleIcon).toEqual({ width: 180, height: 180 });
 });
 
-test('legal routes use the shared navigation and move skip-link focus to main', async ({ page }) => {
+test('every route uses the same complete product header', async ({ page }) => {
+  const expected = [
+    { name: 'Try sample', href: '/demo#composer' },
+    { name: 'Make music', href: '/#composer' },
+    { name: 'Open class gallery', href: '/#class-gallery' },
+    { name: 'Privacy', href: '/privacy/' }
+  ];
+
+  for (const route of ['/', '/demo', '/privacy/', '/terms/', '/no-such-page']) {
+    await page.goto(route);
+    const primary = page.getByRole('navigation', { name: 'Primary' });
+    await expect(primary).toBeVisible();
+    const links = await primary.locator('a').evaluateAll(items => items.map(item => ({
+      name: item.textContent?.trim(), href: item.getAttribute('href')
+    })));
+    expect(links).toEqual(expected);
+    await expect(page.getByRole('link', { name: 'Gridsong home' }).locator('svg')).toHaveCount(1);
+  }
+});
+
+test('legal routes retain skip-link behavior and the complete footer', async ({ page }) => {
   for (const route of ['/privacy/', '/terms/']) {
     await page.goto(route);
     await expect(page.locator('h1')).toHaveCount(1);
-    await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Try sample' })).toHaveAttribute('href', '/demo#composer');
-    await expect(page.getByRole('link', { name: 'Make music' })).toHaveAttribute('href', '/#composer');
     await expect(page.getByRole('navigation', { name: 'Footer' })).toBeVisible();
-    await expect(page.getByText(/Gridsong · Local-first classroom music · v1\.0\.0/)).toBeVisible();
+    await expect(page.getByText(/Gridsong · Songs stay on this device until shared · v1\.0\.0/)).toBeVisible();
     await page.keyboard.press('Tab');
     await expect(page.locator('.skip-link')).toBeFocused();
     await page.keyboard.press('Enter');
@@ -68,6 +85,31 @@ test('legal routes use the shared navigation and move skip-link focus to main', 
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     expect(results.violations).toEqual([]);
   }
+});
+
+test('forward and back route changes focus and announce the page heading', async ({ page }) => {
+  await page.goto('/');
+  const primary = page.getByRole('navigation', { name: 'Primary' });
+  await primary.getByRole('link', { name: 'Privacy' }).click();
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Privacy, in plain language loaded');
+
+  await page.goBack();
+  await expect(page.locator('h1')).toHaveText('Make and play songs on a classroom grid');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Make and play songs on a classroom grid loaded');
+
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Try sample' }).click();
+  await expect(page).toHaveTitle('Demo — Gridsong');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Make and play songs on a classroom grid loaded');
+});
+
+test('the shared class-gallery destination opens the real gallery', async ({ page }) => {
+  await page.goto('/privacy/');
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Open class gallery' }).click();
+  await expect(page).toHaveURL(/\/#class-gallery$/);
+  await expect(page.getByRole('dialog', { name: 'Class gallery' })).toBeVisible();
 });
 
 test('Static Web Apps preserves 404 status while serving the 404 document', async ({}, testInfo) => {

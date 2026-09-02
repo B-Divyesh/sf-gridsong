@@ -51,14 +51,14 @@
   {
     "id": "no-account-backup",
     "claim": "Gridsong has no account-based backup; local composition changes stay in browser storage until copied or exported.",
-    "where": "Privacy, Terms",
+    "where": "landing footer, Privacy, Terms",
     "test": "npm run test:e2e -- --grep @claim:no-account-backup",
     "sandbox": "fresh browser context; compose a local song, record requests, and assert its only persisted copy is the local song key with no gallery or account request"
   },
   {
     "id": "classroom-sequencer",
     "claim": "Students can make a song by turning notes on and off in the grid.",
-    "where": "README",
+    "where": "landing headline, README",
     "test": "npm run test:e2e -- --grep @claim:classroom-sequencer",
     "sandbox": "fresh /demo context; toggle a grid note and assert its pressed state and saved composition change"
   },
@@ -107,7 +107,7 @@
   {
     "id": "student-pass-submit-only",
     "claim": "A student class pass works on another device to submit a song, but cannot read the teacher’s board.",
-    "where": "README, Privacy, Terms",
+    "where": "landing class-gallery steps, README, Privacy, Terms",
     "test": "npm run test:api -- --test-name-pattern @claim:student-pass-submit-only",
     "sandbox": "API capability test proves a student key cannot satisfy the teacher-key read guard while the teacher key can"
   },
@@ -120,14 +120,14 @@
   },
   {
     "id": "gallery-submission-data",
-    "claim": "Only the class pass, nickname, and song are sent with a gallery submission.",
+    "claim": "Only the student class pass, nickname, and song are sent with a gallery submission.",
     "where": "class-gallery steps, Privacy, README",
     "test": "npm run test:e2e -- --grep @claim:gallery-submission-data",
     "sandbox": "fresh browser context and same-origin gallery fixture; intercept the client submission and assert its JSON keys are exactly submitKey, nickname, and song"
   },
   {
     "id": "gallery-record-schema",
-    "claim": "The gallery stores a nickname, composition, submission time, expiry, and hashed access keys; it does not store raw access keys.",
+    "claim": "The gallery stores the nickname, song, submission time, and expiry, with protected checks instead of usable class or teacher keys.",
     "where": "README, Privacy",
     "test": "npm run test:api -- --test-name-pattern @claim:gallery-record-schema",
     "sandbox": "API storage-shape test asserts the persisted gallery and submission records contain the documented fields and hashes rather than raw capabilities"
@@ -141,7 +141,7 @@
   },
   {
     "id": "gallery-expiry-cleanup",
-    "claim": "Expired gallery records are rejected and removed in bounded cleanup during later board creation.",
+    "claim": "Expired gallery records are rejected and deleted in batches of at most 500 when a new board is created.",
     "where": "README, Privacy",
     "test": "npm run test:api -- --test-name-pattern @claim:gallery-expiry-cleanup",
     "sandbox": "API policy test exercises an expired board response and a 501-row cleanup fixture, asserting a 410 response and a 500-record cleanup cap"

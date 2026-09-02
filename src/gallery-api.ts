@@ -35,7 +35,7 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   catch { throw new GalleryApiError(0, 'The class gallery is offline. Reconnect and try again.'); }
   const data = await response.json().catch(() => ({})) as { error?: unknown };
   if (!response.ok) {
-    const fallback = response.status === 410 ? 'This class gallery has closed. Ask your teacher for a new class pass.' : response.status === 429 ? 'That is a lot of tries at once. Wait a minute, then try again.' : 'The class gallery could not finish that. Please try again.';
+    const fallback = response.status === 410 ? 'This class gallery has closed. Ask your teacher for a new student class pass.' : response.status === 429 ? 'That is a lot of tries at once. Wait a minute, then try again.' : 'The class gallery could not finish that. Please try again.';
     throw new GalleryApiError(response.status, typeof data.error === 'string' ? data.error : fallback);
   }
   return data;

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const liveOrigin = process.env.GRIDSONG_LIVE_URL;
+test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
 
 test('deployed polish findings stay fixed on cold routes', async ({ browser }, testInfo) => {
   test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
@@ -50,7 +51,7 @@ test('deployed unknown URL returns the accessible 404 and recovers home', async 
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(results.violations).toEqual([]);
   await page.getByRole('link', { name: 'Return to the composer' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make classroom songs together');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make and play songs on a classroom grid');
 });
 
 test('deployed demo keeps its accessibility, privacy, keyboard, reduced-motion, and offline contracts', async ({ browser }, testInfo) => {
@@ -113,9 +114,9 @@ test('deployed site sends a student song to the live teacher gallery', async ({ 
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto(liveOrigin!);
   await page.locator('.note-cell').first().click();
-  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('link', { name: 'Open class gallery', exact: true }).click();
   await page.getByRole('button', { name: 'Create class board' }).click();
-  await page.getByRole('button', { name: 'Copy student pass' }).click();
+  await page.getByRole('button', { name: 'Copy student class pass' }).click();
   const classPass = await page.evaluate(() => navigator.clipboard.readText());
 
   const studentContext = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
@@ -124,7 +125,7 @@ test('deployed site sends a student song to the live teacher gallery', async ({ 
     await student.goto(classPass);
     await student.getByRole('button', { name: 'Start composing' }).click();
     await student.locator('.note-cell').first().click();
-    await student.getByRole('button', { name: 'Class gallery', exact: true }).click();
+    await student.getByRole('link', { name: 'Open class gallery', exact: true }).click();
     await student.getByLabel('Student nickname').fill('QA Blue Fox');
     await student.getByRole('button', { name: 'Send to class gallery' }).click();
     await expect(student.getByText('Song sent to the class gallery.')).toBeVisible();

@@ -28,17 +28,19 @@
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to page details</a>
-  <header><a class="brand" href="/">Gridsong</a><nav aria-label="Primary"><a href="/demo#composer">Try sample</a><a href="/#composer">Make music</a><a href="/privacy/">Privacy</a></nav></header>
+  <header><a class="brand" href="/" aria-label="Gridsong home"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 8h26v24H7z"/><path d="M13 15h5v5h-5zm9 0h5v5h-5zm-9 9h5v5h-5z"/></svg><span>Gridsong</span></a><nav aria-label="Primary"><a href="/demo#composer">Try sample</a><a href="/#composer">Make music</a><a href="/#class-gallery">Open class gallery</a><a href="/privacy/">Privacy</a></nav></header>
+  <div class="sr-only" id="route-status" role="status" aria-live="polite" aria-atomic="true"></div>
   <main id="main" class="not-found" tabindex="-1">
     <p><strong>Error 404</strong></p>
-    <h1>Page not found</h1>
+    <h1 tabindex="-1">Page not found</h1>
     <p>This address does not lead to a Gridsong page. Return to the composer to make or open a song.</p>
     <div class="error-grid" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <p><a class="primary-link" href="/">Return to the composer</a></p>
   </main>
   <footer>
-    <span>Gridsong · Local-first classroom music · v1.0.0</span>
+    <span>Gridsong · Songs stay on this device until shared · v1.0.0</span>
     <nav class="footer-links" aria-label="Footer"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://sociobot.in">Built by Param Factory</a></nav>
   </footer>
+  <script src="/route-entry.js" defer></script>
 </body>
 </html>
