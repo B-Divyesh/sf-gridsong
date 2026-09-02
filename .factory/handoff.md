@@ -1,4 +1,13 @@
-# Gridsong repair 9 handoff — PASS
+# Gridsong verification 12 handoff — PASS
+
+**Latest independent verification:** candidate `b05e18d0f710aea32b1079849218f2dc15659b0f` at <https://gridsong.sociobot.in> — **PASS** (2026-09-02).
+
+- Fresh `npm ci`, all 26 individually declared claim tests, unit tests (16/16), API tests (14/14), full local browser suite (50 passed; 12 live-only skipped), exact production build, and live browser suite (10/10) passed.
+- The live deployment is byte-for-byte identical to the candidate's built HTML, service worker, CSS, and JavaScript. Live privacy, offline, keyboard, reduced-motion, 390 px mobile, headers, cache policy, and axe checks passed.
+- A gallery accepts 120 songs. The 121st response was `429` with `Retry-After: 60`; verifier-created data was removed.
+- No defects or known gaps were found. Full evidence: `.factory/verification-12.md` and `.factory/evidence/verification-12/`.
+
+## Prior repair handoff
 
 **Work order:** `gridsong-repair-9`
 
