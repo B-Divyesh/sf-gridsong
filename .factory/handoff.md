@@ -30,7 +30,7 @@ All findings in `.factory/review-1.md` and `.factory/review-2.md` are repaired i
 - Every one of the 26 commands in `.factory/claims.json` passed individually from clean clone `/tmp/gridsong-polish2-final-TEgLTX` at commit `49938eb`.
 - `GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1`: 10 passed across desktop and 390 px.
 - `npm run test:live`: malformed-request check, create → submit → read → delete, and three atomic 120-song capacity trials passed.
-- Live `/opt/fleet/lib/verify-url.sh`: HTTP 200 with title, language, h1, main, image alternatives, labelled buttons, and no console errors.
+- Live `/opt/fleet/lib/verify-url.sh` after the final deployment: HTTP 200 with title, language, h1, main, image alternatives, labelled buttons, and no console errors.
 - Live Lighthouse mobile: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.4 s, CLS 0, TBT 30 ms.
 - Production JS, CSS, and service-worker SHA-256 hashes match the local `dist/` files exactly.
 
@@ -40,7 +40,7 @@ All findings in `.factory/review-1.md` and `.factory/review-2.md` are repaired i
 - Copy audit: `.factory/copy-audit.md`
 - Demo contract: `.factory/demo.md`
 - Local evidence: `.factory/evidence/polish-2/local/`
-- Live evidence: `.factory/evidence/polish-2/live/`
+- Live evidence: `.factory/evidence/polish-2/live/` and the final-deployment verifier output in `.factory/evidence/polish-2/live-final/`.
 - Production: <https://gridsong.sociobot.in>
 - Install: `npm ci && npm --prefix api ci`
 - Test: `npm test && npm run test:api && npm run test:e2e`

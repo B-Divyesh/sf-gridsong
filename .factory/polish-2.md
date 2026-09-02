@@ -41,7 +41,7 @@ Repaired from candidate `047f912a5e5a533b10c061fe35c6829d77080e9e` against `.fac
 
 - `GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1`: 10 passed across desktop and 390 px. This includes the cumulative round-1 checks, every round-2 header/copy/focus check, Axe, offline reload, 404 recovery, and a two-browser gallery flow.
 - `npm run test:live`: malformed API input, create → submit → read → delete, and three atomic 120-song capacity trials passed.
-- `/opt/fleet/lib/verify-url.sh https://gridsong.sociobot.in .factory/evidence/polish-2/live`: HTTP 200 and no console errors.
+- `/opt/fleet/lib/verify-url.sh https://gridsong.sociobot.in .factory/evidence/polish-2/live-final`: HTTP 200 and no console errors after the final deployment.
 - Live Lighthouse mobile: performance 100, accessibility 100, best practices 100, SEO 100; LCP 1.4 s, CLS 0, TBT 30 ms.
 - Live mobile/desktop audit: one-click sample action stayed inside both first screens; `/` hid the demo banner; `/?demo=1#composer` showed it with 48 notes; no horizontal overflow or third-party request origins appeared.
 - `/`, `/demo`, `/privacy/`, and `/terms/` returned 200 with route titles. `/not-found-polish-2` returned the designed 404. Every route exposed the same four header destinations and grid-mark wordmark.
