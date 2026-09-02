@@ -66,7 +66,7 @@ test('@claim:demo-sandbox keeps the sample out of real-song storage and can rese
   expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBe(realSong);
 });
 
-test('@claim:local-save creates and restores a demo song without touching real storage', async ({ page }) => {
+test('@claim:classroom-sequencer @claim:local-save creates and restores a demo song without touching real storage', async ({ page }) => {
   await page.goto('/demo#composer');
   const first = page.locator('.note-cell').first();
   const before = await first.getAttribute('aria-pressed');
@@ -78,7 +78,7 @@ test('@claim:local-save creates and restores a demo song without touching real s
   expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).toBeNull();
 });
 
-test('@claim:browser-exports supports keyboard grid editing and browser MIDI/WAV downloads', async ({ page }) => {
+test('@claim:browser-exports @claim:keyboard-grid supports keyboard grid editing and browser MIDI/WAV downloads', async ({ page }) => {
   await page.goto('/demo#composer');
   const first = page.locator('.note-cell').first();
   await first.focus();
@@ -94,6 +94,77 @@ test('@claim:browser-exports supports keyboard grid editing and browser MIDI/WAV
   await expect(page.getByText('WAV exported.')).toBeVisible();
 });
 
+test('@claim:composer-settings exposes every documented scale, size, and tempo boundary', async ({ page }) => {
+  await page.goto('/demo#composer');
+  await expect(page.locator('#scale option')).toHaveText(['Major', 'Minor', 'Pentatonic', 'Chromatic']);
+  await expect(page.locator('#bars option')).toHaveText(['1', '2', '4', '8', '16', '32', '64']);
+  await expect(page.locator('#octaves option')).toHaveText(['1', '2', '3', '4']);
+  await expect(page.locator('#tempo')).toHaveAttribute('min', '50');
+  await expect(page.locator('#tempo')).toHaveAttribute('max', '200');
+
+  await page.locator('#scale').selectOption('chromatic');
+  await page.locator('#octaves').selectOption('4');
+  await page.locator('#bars').selectOption('64');
+  await page.locator('#tempo').evaluate((element: HTMLInputElement) => {
+    element.value = '200';
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await expect(page.locator('#tempo-output')).toHaveText('200 BPM');
+  await expect(page.getByText('Bar 1 of 64')).toBeVisible();
+  await expect(page.locator('.note-cell')).toHaveCount(800);
+
+  await page.locator('#tempo').evaluate((element: HTMLInputElement) => {
+    element.value = '50';
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await expect(page.locator('#tempo-output')).toHaveText('50 BPM');
+});
+
+test('@claim:instrument-choices offers four melody sounds and dedicated kick and clap rows', async ({ page }) => {
+  await page.goto('/demo#composer');
+  for (const sound of ['Lantern', 'Reed', 'Bell', 'Pluck']) {
+    await expect(page.getByRole('button', { name: sound, exact: true })).toBeVisible();
+  }
+  await page.getByRole('button', { name: 'Pluck', exact: true }).click();
+  await page.locator('.note-cell').first().click();
+  await expect(page.locator('.note-cell').first()).toHaveAttribute('aria-label', /on with pluck/);
+
+  const kick = page.locator('.note-cell').nth(225);
+  const clap = page.locator('.note-cell').nth(241);
+  await kick.click();
+  await clap.click();
+  await expect(kick).toHaveAttribute('aria-label', /Kick drum.*on with kick/);
+  await expect(clap).toHaveAttribute('aria-label', /Clap.*on with clap/);
+});
+
+test('@claim:audio-user-gesture does not construct audio until the user presses Play', async ({ browser }) => {
+  const context = await browser.newContext();
+  await context.addInitScript(() => {
+    const NativeAudioContext = window.AudioContext;
+    Object.defineProperty(window, '__gridsongAudioContexts', { value: 0, writable: true, configurable: true });
+    if (!NativeAudioContext) return;
+    Object.defineProperty(window, 'AudioContext', {
+      configurable: true,
+      value: new Proxy(NativeAudioContext, {
+        construct(target, args) {
+          (window as Window & { __gridsongAudioContexts: number }).__gridsongAudioContexts += 1;
+          return Reflect.construct(target, args);
+        }
+      })
+    });
+  });
+  const page = await context.newPage();
+  try {
+    await page.goto('/demo#composer');
+    expect(await page.evaluate(() => (window as Window & { __gridsongAudioContexts: number }).__gridsongAudioContexts)).toBe(0);
+    await page.getByRole('button', { name: 'Play song' }).click();
+    await expect.poll(() => page.evaluate(() => (window as Window & { __gridsongAudioContexts: number }).__gridsongAudioContexts)).toBe(1);
+    await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  } finally {
+    await context.close();
+  }
+});
+
 test('@claim:complete-song-links opens the complete sample song from a copied demo link', async ({ browser }) => {
   const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
   const page = await context.newPage();
@@ -105,11 +176,55 @@ test('@claim:complete-song-links opens the complete sample song from a copied de
     const opened = await context.newPage();
     await opened.goto(copied);
     await expect(opened.getByLabel('Song title')).toHaveValue('Morning call and response');
+    await expect(opened.locator('#scale')).toHaveValue('major');
+    await expect(opened.locator('#bars')).toHaveValue('4');
+    await expect(opened.locator('#octaves')).toHaveValue('2');
+    await expect(opened.locator('#tempo')).toHaveValue('104');
     await expect(opened.locator('.note-cell.active')).toHaveCount(12);
     expect(await opened.evaluate(() => JSON.parse(localStorage.getItem('demo:gridsong.song.v1') ?? '{}').notes?.length)).toBe(48);
   } finally {
     await context.close();
   }
+});
+
+test('@claim:teacher-key-browser stores teacher access locally but excludes it from the copied student pass', async ({ page }) => {
+  const teacherKey = 'teacher-key-0123456789_abcdef0123456789';
+  const studentKey = 'student-key-0123456789_abcdef0123456789';
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.route('**/api/**', async route => {
+    const url = new URL(route.request().url());
+    if (route.request().method() === 'POST' && url.pathname === '/api/galleries') {
+      return route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: '12345678-1234-4234-9234-123456789abc',
+          createdAt: 100,
+          expiresAt: Date.now() + 90 * 86_400_000,
+          teacherKey,
+          studentKey,
+          entries: []
+        })
+      });
+    }
+    return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Not found' }) });
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('button', { name: 'Create class board' }).click();
+  await page.getByRole('button', { name: 'Copy student pass' }).click();
+  const result = await page.evaluate(async () => {
+    const copied = await navigator.clipboard.readText();
+    const encoded = new URL(copied).hash.match(/gallery=(GSP1\.[^&]+)/)?.[1].slice(5) ?? '';
+    const padded = encoded.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - encoded.length % 4) % 4);
+    const binary = atob(padded);
+    const decoded = JSON.parse(new TextDecoder().decode(Uint8Array.from(binary, character => character.charCodeAt(0))));
+    return { access: JSON.parse(localStorage.getItem('gridsong.gallery.v3.active') ?? '{}'), decoded };
+  });
+  expect(result.access).toMatchObject({ teacherKey, studentKey, id: '12345678-1234-4234-9234-123456789abc' });
+  expect(result.decoded).toEqual({ v: 1, galleryId: '12345678-1234-4234-9234-123456789abc', submitKey: studentKey, expiresAt: expect.any(Number) });
+  expect(result.decoded).not.toHaveProperty('teacherKey');
 });
 
 test('@claim:gallery-direct-submit student submits directly to the teacher gallery across separate devices', async ({ page, browser }) => {
@@ -228,6 +343,53 @@ test('@claim:gallery-submission-data sends only the class pass, nickname, and so
   }));
 });
 
+test('@claim:teacher-removes-submissions lets a teacher remove a submission with the private board key', async ({ page }) => {
+  const id = '12345678-1234-4234-9234-123456789abc';
+  const teacherKey = 'teacher-key-0123456789_abcdef0123456789';
+  const studentKey = 'student-key-0123456789_abcdef0123456789';
+  const gallery = {
+    id,
+    createdAt: 100,
+    expiresAt: Date.now() + 90 * 86_400_000,
+    teacherKey,
+    studentKey,
+    entries: [{
+      id: 'submission-000',
+      nickname: 'Blue Fox',
+      createdAt: 200,
+      song: 'GS2S.AQEBAEYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    }]
+  };
+  let deleteRequest: { path: string; teacherKey: string | null } | undefined;
+  await page.route('**/api/**', async route => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const response = (status: number, body: unknown) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+    if (request.method() === 'POST' && url.pathname === '/api/galleries') {
+      return response(201, gallery);
+    }
+    if (request.method() === 'GET' && url.pathname.endsWith(`/${id}`)) {
+      return response(200, gallery);
+    }
+    if (request.method() === 'DELETE' && url.pathname === `/api/galleries/${id}/submissions/submission-000`) {
+      deleteRequest = { path: url.pathname, teacherKey: await request.headerValue('x-gridsong-teacher-key') };
+      gallery.entries.length = 0;
+      return response(200, { ok: true });
+    }
+    return response(404, { error: 'Not found' });
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
+  await page.getByRole('button', { name: 'Create class board' }).click();
+  await expect(page.getByText(/by Blue Fox/)).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Remove' }).click();
+  await expect.poll(() => deleteRequest).toEqual({ path: `/api/galleries/${id}/submissions/submission-000`, teacherKey });
+  await expect.poll(() => gallery.entries.length).toBe(0);
+  await expect(page.getByText('Submission removed.')).toBeVisible();
+});
+
 test('@claim:offline-reload opens the cached demo composer shell while offline', async ({ browser }) => {
   // This must own its context: closing/reusing the shared context would make
   // later browser tests fail and would not prove a clean offline reload.
@@ -253,17 +415,40 @@ test('@claim:offline-reload opens the cached demo composer shell while offline',
   }
 });
 
-test('@claim:privacy-local-demo makes no third-party requests or account prompts', async ({ browser, baseURL }) => {
+test('@claim:privacy-local-demo @claim:privacy-technical-footprint makes no third-party requests, cookies, or account prompts', async ({ browser, baseURL }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
   const requests: string[] = [];
+  const responseHeaders: Record<string, string>[] = [];
   page.on('request', request => requests.push(request.url()));
+  page.on('response', response => responseHeaders.push(response.headers()));
   try {
     await page.goto('/demo#composer');
     await page.locator('.note-cell').first().click();
     await page.getByRole('button', { name: 'Class gallery', exact: true }).click();
     const origin = new URL(baseURL!).origin;
     expect(requests.every(url => new URL(url).origin === origin)).toBe(true);
+    const resources = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.name));
+    expect(resources.every(url => new URL(url).origin === origin)).toBe(true);
+    expect(responseHeaders.some(headers => 'set-cookie' in headers)).toBe(false);
+    expect(await context.cookies()).toEqual([]);
+    await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:no-account-backup keeps a composed real song in local storage without an account or gallery request', async ({ browser, baseURL }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const requests: string[] = [];
+  page.on('request', request => requests.push(request.url()));
+  try {
+    await page.goto('/');
+    await page.locator('.note-cell').first().click();
+    expect(await page.evaluate(() => localStorage.getItem('gridsong.song.v1'))).not.toBeNull();
+    expect(requests.some(url => new URL(url).pathname.startsWith('/api/'))).toBe(false);
+    expect(requests.every(url => new URL(url).origin === new URL(baseURL!).origin)).toBe(true);
     await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
   } finally {
     await context.close();

@@ -90,6 +90,76 @@ test('@claim:gallery-retention class boards retain only the documented 90-day li
   assert.equal(GALLERY_RETENTION_MS, 90 * 24 * 60 * 60 * 1000);
 });
 
+test('@claim:student-pass-submit-only a submit key cannot satisfy the teacher-board read guard', async () => {
+  const { activeGallery, galleryEntity, sameToken } = require('../src/functions/gallery.js');
+  const teacherKey = 'teacher-key-0123456789_abcdef0123456789';
+  const studentKey = 'student-key-0123456789_abcdef0123456789';
+  const entity = galleryEntity('12345678-1234-4234-9234-123456789abc', 100, Date.now() + 60_000, teacherKey, studentKey);
+  assert.equal(sameToken(teacherKey, entity.teacherKeyHash), true);
+  assert.equal(sameToken(studentKey, entity.teacherKeyHash), false);
+
+  const active = await activeGallery({ getEntity: async () => entity }, entity.partitionKey);
+  assert.equal(active.response, undefined);
+  const source = await readFile(join(__dirname, '..', 'src', 'functions', 'gallery.js'), 'utf8');
+  assert.match(source, /sameToken\(request\.headers\.get\('x-gridsong-teacher-key'\), result\.gallery\.teacherKeyHash\)/);
+});
+
+test('@claim:gallery-record-schema persists only documented gallery fields and hashed capabilities', async () => {
+  const { galleryEntity, tokenHash } = require('../src/functions/gallery.js');
+  const teacherKey = 'teacher-key-0123456789_abcdef0123456789';
+  const studentKey = 'student-key-0123456789_abcdef0123456789';
+  const gallery = galleryEntity('12345678-1234-4234-9234-123456789abc', 100, 200, teacherKey, studentKey);
+  assert.deepEqual(gallery, {
+    partitionKey: '12345678-1234-4234-9234-123456789abc',
+    rowKey: 'gallery',
+    kind: 'gallery',
+    createdAt: 100,
+    expiresAt: 200,
+    teacherKeyHash: tokenHash(teacherKey),
+    studentKeyHash: tokenHash(studentKey)
+  });
+  assert.equal(Object.values(gallery).includes(teacherKey), false);
+  assert.equal(Object.values(gallery).includes(studentKey), false);
+
+  let stored;
+  const client = {
+    async createEntity(entity) { stored = entity; },
+    async *listEntities() {}
+  };
+  await reserveSubmissionSlot(client, gallery, { nickname: 'Blue Fox', song: compactSong(), createdAt: 150 });
+  assert.deepEqual(stored, {
+    partitionKey: gallery.partitionKey,
+    rowKey: stored.rowKey,
+    kind: 'submission',
+    nickname: 'Blue Fox',
+    song: compactSong(),
+    createdAt: 150,
+    expiresAt: 200
+  });
+});
+
+test('@claim:gallery-expiry-cleanup rejects expired boards and deletes no more than 500 expired records', async () => {
+  const { activeGallery, cleanExpired } = require('../src/functions/gallery.js');
+  const expiredId = '12345678-1234-4234-9234-123456789abc';
+  const expired = await activeGallery({ getEntity: async () => ({ partitionKey: expiredId, expiresAt: 100 }) }, expiredId);
+  assert.equal(expired.response.status, 410);
+  assert.equal(expired.response.jsonBody.error, 'This class gallery has closed. Ask your teacher for a new class pass.');
+
+  const deleted = [];
+  let filter;
+  const client = {
+    async *listEntities(options) {
+      filter = options.queryOptions.filter;
+      for (let index = 0; index < 501; index++) yield { partitionKey: `old-${index}`, rowKey: 'gallery' };
+    },
+    async deleteEntity(partitionKey, rowKey) { deleted.push({ partitionKey, rowKey }); }
+  };
+  await cleanExpired(client, 1234);
+  assert.equal(filter, 'expiresAt le 1234L');
+  assert.equal(deleted.length, 500);
+  assert.deepEqual(deleted.at(-1), { partitionKey: 'old-499', rowKey: 'gallery' });
+});
+
 test('@claim:gallery-capacity a full board returns a retryable 429 with Retry-After', () => {
   const { fullGalleryResponse } = require('../src/functions/gallery.js');
   const response = fullGalleryResponse();
@@ -99,9 +169,10 @@ test('@claim:gallery-capacity a full board returns a retryable 429 with Retry-Af
   assert.equal(response.headers['cache-control'], 'no-store');
 });
 
-test('production deployment contract ships the Function API with the static app', async () => {
+test('@claim:developer-runtime production deployment contract ships the Node 22 Function API with the static app', async () => {
   const deployment = JSON.parse(await readFile(join(root, 'swa-cli.config.json'), 'utf8'));
   const staticConfig = JSON.parse(await readFile(join(root, 'public/staticwebapp.config.json'), 'utf8'));
+  const apiManifest = JSON.parse(await readFile(join(root, 'api', 'package.json'), 'utf8'));
   const notFoundPage = await readFile(join(root, 'public/404.html'), 'utf8');
   const production = deployment.configurations.production;
   assert.deepEqual(
@@ -110,6 +181,7 @@ test('production deployment contract ships the Function API with the static app'
   );
   assert.equal(production.appName, 'sf-gridsong');
   assert.equal(production.apiVersion, '22');
+  assert.equal(apiManifest.engines.node, '>=22');
   assert.equal(staticConfig.platform.apiRuntime, 'node:22');
   assert.equal(staticConfig.navigationFallback, undefined);
   assert.deepEqual(staticConfig.responseOverrides['404'], { rewrite: '/404.html' });

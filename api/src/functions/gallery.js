@@ -42,6 +42,18 @@ function sameToken(value, hash) {
   return received.length === stored.length && timingSafeEqual(received, stored);
 }
 
+function galleryEntity(id, createdAt, expiresAt, teacherKey, studentKey) {
+  return {
+    partitionKey: id,
+    rowKey: 'gallery',
+    kind: 'gallery',
+    createdAt,
+    expiresAt,
+    teacherKeyHash: tokenHash(teacherKey),
+    studentKeyHash: tokenHash(studentKey)
+  };
+}
+
 async function table() {
   if (!tablePromise) {
     const galleryConnection = process.env.GALLERY_STORAGE_CONNECTION;
@@ -94,9 +106,9 @@ async function galleryView(client, gallery) {
 // Managed Static Web Apps Functions support HTTP triggers only. Removing expired
 // rows as teachers open new boards keeps the data retention boundary enforceable
 // without an unsupported timer-trigger deployment.
-async function cleanExpired(client) {
+async function cleanExpired(client, timestamp = now()) {
   const expired = [];
-  for await (const entity of client.listEntities({ queryOptions: { filter: expiredFilter(now()) } })) {
+  for await (const entity of client.listEntities({ queryOptions: { filter: expiredFilter(timestamp) } })) {
     expired.push({ partitionKey: entity.partitionKey, rowKey: entity.rowKey });
     if (expired.length >= CLEANUP_LIMIT) break;
   }
@@ -111,7 +123,7 @@ app.http('galleries', {
       const client = await table();
       await cleanExpired(client);
       const id = randomUUID(), teacherKey = token(), studentKey = token(), createdAt = now(), expiresAt = createdAt + GALLERY_RETENTION_MS;
-      await client.createEntity({ partitionKey: id, rowKey: 'gallery', kind: 'gallery', createdAt, expiresAt, teacherKeyHash: tokenHash(teacherKey), studentKeyHash: tokenHash(studentKey) });
+      await client.createEntity(galleryEntity(id, createdAt, expiresAt, teacherKey, studentKey));
       return json(201, { id, createdAt, expiresAt, entries: [], teacherKey, studentKey });
     } catch (error) { return fail(error.status || 503, error.status ? error.message : 'The class board could not be created.'); }
   }
@@ -147,7 +159,7 @@ app.http('gallery-submit', {
   }
 });
 
-module.exports = { fullGalleryResponse, json };
+module.exports = { activeGallery, cleanExpired, fullGalleryResponse, galleryEntity, json, sameToken, tokenHash };
 
 app.http('gallery-delete', {
   methods: ['DELETE'], route: 'galleries/{id}/submissions/{entryId}', authLevel: 'anonymous',

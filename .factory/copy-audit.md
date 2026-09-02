@@ -27,15 +27,14 @@ Reviewed 2026-09-02. The cold first screen names the job, K–8 audience, sample
 | Words | Sentence |
 | ---: | --- |
 | 10 | Gridsong is a classroom step sequencer for K–8 music lessons. |
-| 8 | Students make songs on a colour grid. |
-| 18 | They can save a link, export WAV or MIDI, or send a nickname-only song to the class gallery. |
-| 5 | No accounts, ads, or tracking. |
-| 11 | Choose major, minor, pentatonic, or chromatic scales across one to four octaves. |
-| 13 | Make one to 64 bars at 50–200 BPM, one clear bar at a time. |
-| 8 | Choose four melody sounds, plus kick and clap. |
+| 13 | Students make songs by turning notes on and off in a colour grid. |
+| 19 | Students can save a song link, export WAV or MIDI, or send a nickname-only song to a class gallery. |
+| 11 | No account, ads, or tracking are required to compose in the demo. |
+| 20 | Choose major, minor, pentatonic, or chromatic scales across one to four octaves, in one to 64 bars at 50–200 BPM. |
+| 11 | Choose Lantern, Reed, Bell, or Pluck for melody, plus kick and clap. |
 | 11 | Your song saves on this device and in a copied song link. |
 | 9 | Export your song as a WAV or MIDI file. |
-| 11 | Teachers can share a class link that closes after 90 days. |
+| 12 | Teachers can share a student class pass that submits to a board for 90 days. |
 | 10 | Use the grid by keyboard or on a phone. |
 | 8 | The composer works offline after its first visit. |
 

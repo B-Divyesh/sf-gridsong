@@ -2,30 +2,30 @@
   {
     "id": "demo-sandbox",
     "claim": "Try the four-bar sample without saving it to your real songs.",
-    "where": "landing action, demo banner, README",
+    "where": "landing action, demo banner, README, Privacy",
     "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
     "sandbox": "fresh browser context; create a real local song, enter /demo, edit and reset the sample; assert only demo:gridsong.song.v1 changes"
   },
   {
     "id": "local-save",
     "claim": "Songs save on this device.",
-    "where": "landing facts, composer save state, README",
+    "where": "landing facts, composer save state, README, Privacy",
     "test": "npm run test:e2e -- --grep @claim:local-save",
     "sandbox": "fresh /demo context; toggle a note, reload, and assert the demo song restores while the real key stays absent"
   },
   {
     "id": "browser-exports",
     "claim": "Exports WAV and MIDI in your browser.",
-    "where": "landing facts, export controls, README",
+    "where": "landing facts, export controls, README, Privacy, Terms",
     "test": "npm run test:e2e -- --grep @claim:browser-exports",
     "sandbox": "fresh /demo context with the shipped sample; assert both downloadable file types"
   },
   {
     "id": "complete-song-links",
     "claim": "Copied song links contain the whole song.",
-    "where": "copy-link status, README",
+    "where": "copy-link status, README, Privacy, Terms",
     "test": "npm run test:e2e -- --grep @claim:complete-song-links",
-    "sandbox": "fresh /demo context; copy the shipped sample link, open it in a new page, and assert its title and all 48 active notes"
+    "sandbox": "fresh /demo context; copy the shipped sample link, open it in a new page, and assert its title, settings, and active notes restore"
   },
   {
     "id": "offline-reload",
@@ -36,10 +36,66 @@
   },
   {
     "id": "privacy-local-demo",
-    "claim": "No account, ads, or tracking.",
-    "where": "landing facts, footer, README, privacy page",
+    "claim": "No account, ads, or tracking are required to compose in the demo.",
+    "where": "landing facts, footer, README, Privacy",
     "test": "npm run test:e2e -- --grep @claim:privacy-local-demo",
     "sandbox": "fresh /demo context; record every request during composition and demo-gallery opening, assert same-origin only and no account fields"
+  },
+  {
+    "id": "privacy-technical-footprint",
+    "claim": "The delivered app sets no cookies and loads no third-party fonts or scripts.",
+    "where": "Privacy",
+    "test": "npm run test:e2e -- --grep @claim:privacy-technical-footprint",
+    "sandbox": "fresh /demo context; collect response headers and resource URLs, then assert no Set-Cookie, no browser cookies, and same-origin resources only"
+  },
+  {
+    "id": "no-account-backup",
+    "claim": "Gridsong has no account-based backup; local composition changes stay in browser storage until copied or exported.",
+    "where": "Privacy, Terms",
+    "test": "npm run test:e2e -- --grep @claim:no-account-backup",
+    "sandbox": "fresh browser context; compose a local song, record requests, and assert its only persisted copy is the local song key with no gallery or account request"
+  },
+  {
+    "id": "classroom-sequencer",
+    "claim": "Students can make a song by turning notes on and off in the grid.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:classroom-sequencer",
+    "sandbox": "fresh /demo context; toggle a grid note and assert its pressed state and saved composition change"
+  },
+  {
+    "id": "composer-settings",
+    "claim": "Choose major, minor, pentatonic, or chromatic scales across one to four octaves, in one to 64 bars at 50–200 BPM.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:composer-settings",
+    "sandbox": "fresh /demo context; select every documented boundary and assert the controls, visible one-bar grid, and tempo output update"
+  },
+  {
+    "id": "instrument-choices",
+    "claim": "Choose four melody sounds, plus kick and clap.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:instrument-choices",
+    "sandbox": "fresh /demo context; assert the four labelled melody controls and turn on each dedicated percussion row"
+  },
+  {
+    "id": "keyboard-grid",
+    "claim": "Use the grid by keyboard.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:keyboard-grid",
+    "sandbox": "fresh /demo context; use Space to toggle a note and ArrowRight to move focus"
+  },
+  {
+    "id": "audio-user-gesture",
+    "claim": "Audio starts only after a user presses Play.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:audio-user-gesture",
+    "sandbox": "fresh /demo context with an AudioContext construction observer; assert no context before Play and one after the user click"
+  },
+  {
+    "id": "developer-runtime",
+    "claim": "Development and the deployed gallery Function use Node 22, and the production static output is dist/.",
+    "where": "README",
+    "test": "npm run test:api -- --test-name-pattern @claim:developer-runtime",
+    "sandbox": "deployment-contract test asserts the Node 22 engine/runtime and production output location"
   },
   {
     "id": "gallery-direct-submit",
@@ -49,18 +105,53 @@
     "sandbox": "two fresh browser contexts and a same-origin gallery service fixture; assert pass → direct submit → teacher poll with no ticket pasting"
   },
   {
+    "id": "student-pass-submit-only",
+    "claim": "A student class pass works on another device to submit a song, but cannot read the teacher’s board.",
+    "where": "README, Privacy, Terms",
+    "test": "npm run test:api -- --test-name-pattern @claim:student-pass-submit-only",
+    "sandbox": "API capability test proves a student key cannot satisfy the teacher-key read guard while the teacher key can"
+  },
+  {
+    "id": "teacher-key-browser",
+    "claim": "The teacher access key is stored in the teacher’s browser and is not included in a student class pass.",
+    "where": "README, Privacy",
+    "test": "npm run test:e2e -- --grep @claim:teacher-key-browser",
+    "sandbox": "fresh browser context and gallery fixture; create a board, inspect the local access record, and decode the copied pass to assert it has no teacher key"
+  },
+  {
     "id": "gallery-submission-data",
     "claim": "Only the class pass, nickname, and song are sent with a gallery submission.",
-    "where": "class-gallery steps, privacy page, README",
+    "where": "class-gallery steps, Privacy, README",
     "test": "npm run test:e2e -- --grep @claim:gallery-submission-data",
     "sandbox": "fresh browser context and same-origin gallery fixture; intercept the client submission and assert its JSON keys are exactly submitKey, nickname, and song"
   },
   {
+    "id": "gallery-record-schema",
+    "claim": "The gallery stores a nickname, composition, submission time, expiry, and hashed access keys; it does not store raw access keys.",
+    "where": "README, Privacy",
+    "test": "npm run test:api -- --test-name-pattern @claim:gallery-record-schema",
+    "sandbox": "API storage-shape test asserts the persisted gallery and submission records contain the documented fields and hashes rather than raw capabilities"
+  },
+  {
     "id": "gallery-retention",
     "claim": "Class boards close after 90 days.",
-    "where": "class-gallery dialog, README, privacy page, terms",
+    "where": "class-gallery dialog, README, Privacy, Terms",
     "test": "npm run test:api -- --test-name-pattern @claim:gallery-retention",
     "sandbox": "API policy test asserts the exact 90-day retention duration used to create class boards"
+  },
+  {
+    "id": "gallery-expiry-cleanup",
+    "claim": "Expired gallery records are rejected and removed in bounded cleanup during later board creation.",
+    "where": "README, Privacy",
+    "test": "npm run test:api -- --test-name-pattern @claim:gallery-expiry-cleanup",
+    "sandbox": "API policy test exercises an expired board response and a 501-row cleanup fixture, asserting a 410 response and a 500-record cleanup cap"
+  },
+  {
+    "id": "teacher-removes-submissions",
+    "claim": "Teachers can remove a gallery submission before the board expires.",
+    "where": "Privacy, Terms",
+    "test": "npm run test:e2e -- --grep @claim:teacher-removes-submissions",
+    "sandbox": "fresh browser context and gallery fixture; create a board containing a submission, confirm removal, and assert the teacher-key DELETE request"
   },
   {
     "id": "gallery-capacity",
@@ -82,5 +173,12 @@
     "where": "404 page",
     "test": "npm run test:e2e -- --grep @claim:unknown-route-recovery",
     "sandbox": "fresh desktop and 390×844 browser contexts; request /no-such-page, assert HTTP 404, accessible page content, no overflow, and successful recovery to the composer"
+  },
+  {
+    "id": "documentation-claims-inventory",
+    "claim": "Every marked README, Privacy, and Terms product claim has a matching inventory entry and tagged regression test.",
+    "where": ".factory/claims.json, README, Privacy, Terms",
+    "test": "npm test -- --testNamePattern @claim:documentation-claims-inventory",
+    "sandbox": "repository contract test scans documentation claim markers and asserts each ID is declared with a test whose source contains the exact @claim tag"
   }
 ]

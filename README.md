@@ -1,39 +1,50 @@
 # Gridsong
 
-Gridsong is a classroom step sequencer for K–8 music lessons. Students make songs on a colour grid. They can save a link, export WAV or MIDI, or send a nickname-only song to the class gallery. No accounts, ads, or tracking.
+Gridsong is a classroom step sequencer for K–8 music lessons. Students make songs by turning notes on and off in a colour grid. <!-- claim:classroom-sequencer -->
+
+Students can save a song link, export WAV or MIDI, or send a nickname-only song to a class gallery. <!-- claim:complete-song-links --> <!-- claim:browser-exports --> <!-- claim:gallery-direct-submit -->
+
+No account, ads, or tracking are required to compose in the demo. <!-- claim:privacy-local-demo -->
 
 Live: <https://gridsong.sociobot.in>
 
 ## What it includes
 
-- Choose major, minor, pentatonic, or chromatic scales across one to four octaves.
-- Make one to 64 bars at 50–200 BPM, one clear bar at a time.
-- Choose four melody sounds, plus kick and clap.
-- Your song saves on this device and in a copied song link.
-- Export your song as a WAV or MIDI file.
-- Teachers can share a class link that closes after 90 days.
-- Use the grid by keyboard or on a phone. The composer works offline after its first visit.
+- Choose major, minor, pentatonic, or chromatic scales across one to four octaves, in one to 64 bars at 50–200 BPM. <!-- claim:composer-settings -->
+- Choose Lantern, Reed, Bell, or Pluck for melody, plus kick and clap. <!-- claim:instrument-choices -->
+- Your song saves on this device and in a copied song link. <!-- claim:local-save --> <!-- claim:complete-song-links -->
+- Export your song as a WAV or MIDI file. <!-- claim:browser-exports -->
+- Teachers can share a student class pass that submits to a board for 90 days. <!-- claim:student-pass-submit-only --> <!-- claim:gallery-retention -->
+- Use the grid by keyboard or on a phone. The composer works offline after its first visit. <!-- claim:keyboard-grid --> <!-- claim:mobile-390 --> <!-- claim:offline-reload -->
 
 ## Try the sample safely
 
-Open <https://gridsong.sociobot.in/?demo=1> or choose **Try it with sample data** on the first screen. The demo starts with a four-bar call-and-response. It keeps demo edits apart from your real song. The persistent **Demo — sample data, nothing is saved** banner offers **Reset demo** and **Start for real**. Start for real opens a fresh composer and never reads demo data.
+Open <https://gridsong.sociobot.in/demo#composer> or choose **Try it with sample data** on the first screen. The demo starts with a four-bar call-and-response and keeps demo edits apart from your real song. <!-- claim:demo-sandbox -->
+
+The persistent **Demo — sample data, nothing is saved** banner offers **Reset demo** and **Start for real**. Start for real opens a fresh composer without reading demo storage. <!-- claim:demo-sandbox -->
 
 ## Classroom gallery, across devices
 
-The teacher creates a board on the projector and copies its **student class pass**. The link works on any student device. Students can send songs with it, but cannot see the board. A student opens it, composes, enters a classroom nickname, and presses **Send to class gallery**. New songs appear on the open projector board.
+The teacher creates a board on the projector and copies its **student class pass**. Students can use the pass on another device to send a nickname and song, but cannot read the teacher’s board. <!-- claim:student-pass-submit-only -->
 
-The teacher key stays in the teacher’s browser. The gallery stores the nickname, song, submission time, and security data. Each board accepts 120 songs and closes after 90 days.
+New songs appear on the open projector board. <!-- claim:gallery-direct-submit -->
+
+The teacher access key is stored in the teacher’s browser. It is not included in the student class pass. <!-- claim:teacher-key-browser -->
+
+The gallery stores a nickname, composition, submission time, expiry, and hashed access keys. It does not store raw access keys. <!-- claim:gallery-record-schema -->
+
+Each board accepts 120 songs and closes after 90 days. <!-- claim:gallery-capacity --> <!-- claim:gallery-retention -->
 
 ## Develop and deploy
 
-Requires Node.js 22+.
+Requires Node.js 22+. <!-- claim:developer-runtime -->
 
 ```sh
 npm install
 npm run dev
 ```
 
-Vite prints a local URL. Audio starts only after a user presses Play, as required by iPad and other mobile browsers.
+Audio starts only after a user presses **Play**. <!-- claim:audio-user-gesture -->
 
 ## Test and build
 
@@ -46,17 +57,23 @@ npm run preview   # serve dist locally
 npm run test:live # live Function smoke + gallery flow + atomic 120-song capacity
 ```
 
-Claim coverage is declared in `.factory/claims.json`. Each command in that file runs a tagged observable regression. The demo/browser claims use `/demo` from a fresh browser context.
+Claim coverage is declared in `.factory/claims.json`. Every marked product claim in this README and the legal pages has a matching tagged regression. <!-- claim:documentation-claims-inventory -->
 
-The deployment artifact is `dist/`, with `dist/index.html` at its root. `swa-cli.config.json` is the production deployment contract: it deploys `dist/` and the `api/` HTTP Function together to the Standard `sf-gridsong` Static Web App. Provision the `gridsonggalleries` Azure Table first, then set `GALLERY_STORAGE_CONNECTION` to an HTTPS-only table-scoped SAS connection string with read/add/update/delete access for that table. No value is committed in this repository. After a deployment, run `node scripts/live-api-smoke.mjs` to make sure the live Function, rather than the static fallback, answers `/api/galleries`. `public/staticwebapp.config.json` contains Azure Static Web Apps routes, headers, cache policy, and the Node API runtime.
+Deploy `dist/` and the `api/` HTTP Function with `swa-cli.config.json`. Before production deployment, set `GALLERY_STORAGE_CONNECTION` for the provisioned `gridsonggalleries` table. Do not commit that value.
 
 ## Privacy and data
 
-The current song and teacher access key use browser local storage. Demo songs use a separate `demo:gridsong.*` namespace. A class pass carries only an opaque board reference, a submit-only capability, and expiry; song links contain a composition. The gallery service receives only the nickname and composition necessary for the classroom activity. Boards close at 90 days; expired records are removed in bounded cleanup during later board creation. Students should use classroom aliases rather than full names. See [/privacy](https://gridsong.sociobot.in/privacy/) and [/terms](https://gridsong.sociobot.in/terms/).
+The current song and teacher access key use browser local storage. Demo songs use a separate `demo:gridsong.*` namespace. <!-- claim:local-save --> <!-- claim:teacher-key-browser --> <!-- claim:demo-sandbox -->
 
-## Design and provenance
+A class pass carries an opaque board reference, a submit-only capability, and an expiry. A song link carries the composition. <!-- claim:student-pass-submit-only --> <!-- claim:complete-song-links -->
 
-The product brief is in `.factory/brief.json`; the night-market visual system and generated-art prompt/provenance are in `.factory/design.md` and `assets/src/`.
+The gallery service receives only the nickname, composition, and submit capability needed for the classroom activity. <!-- claim:gallery-submission-data -->
+
+Boards close after 90 days. Expired records are rejected and removed in bounded cleanup during later board creation. <!-- claim:gallery-retention --> <!-- claim:gallery-expiry-cleanup -->
+
+Gridsong has no account-based backup. Keep work by copying a song link or exporting WAV/MIDI. <!-- claim:no-account-backup --> <!-- claim:complete-song-links --> <!-- claim:browser-exports -->
+
+See [/privacy](https://gridsong.sociobot.in/privacy/) and [/terms](https://gridsong.sociobot.in/terms/).
 
 ## License
 
