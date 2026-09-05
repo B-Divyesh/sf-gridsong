@@ -52,6 +52,38 @@ test('published routes expose canonical and social metadata with a 1200 by 630 i
   expect(appleIcon).toEqual({ width: 180, height: 180 });
 });
 
+test('installed-app copy names the job in plain words', async ({ request }) => {
+  const response = await request.get('/manifest.webmanifest');
+  expect(response.ok()).toBe(true);
+  const manifest = await response.json() as { description?: string };
+  const description = manifest.description ?? '';
+  expect(description.split(/\s+/)).toHaveLength(10);
+  expect(description).toMatch(/^Make\b/);
+  expect(description.toLowerCase()).not.toContain('local-first');
+});
+
+test('stable public files revalidate while content-hashed bundles are immutable', async ({ page, request }) => {
+  const response = await page.goto('/');
+  const html = await response!.text();
+  const hashedAssets = [...html.matchAll(/(?:src|href)="(\/assets\/index-[^"]+\.(?:js|css))"/g)].map(match => match[1]);
+  expect(hashedAssets).toHaveLength(2);
+
+  for (const path of hashedAssets) {
+    const asset = await request.get(path);
+    expect(asset.ok()).toBe(true);
+    expect(asset.headers()['cache-control']).toContain('max-age=31536000');
+    expect(asset.headers()['cache-control']).toContain('immutable');
+  }
+
+  for (const path of ['/route-entry.js', '/legal.css', '/assets/night-market-grid.webp', '/assets/gridsong-social.jpg']) {
+    const asset = await request.get(path);
+    expect(asset.ok()).toBe(true);
+    expect(asset.headers()['cache-control']).toContain('max-age=0');
+    expect(asset.headers()['cache-control']).toContain('must-revalidate');
+    expect(asset.headers()['cache-control']).not.toContain('immutable');
+  }
+});
+
 test('every route uses the same complete product header', async ({ page }) => {
   const expected = [
     { name: 'Try sample', href: '/demo#composer' },

@@ -60,6 +60,41 @@ test('demo banner actions have 44px targets and visible keyboard focus', async (
   }
 });
 
+test('390px note controls and reported route links meet the touch-target baseline', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile');
+  await page.goto('/demo#composer');
+
+  const geometry = await page.locator('.note-cell').evaluateAll(cells => {
+    const first = cells[0].getBoundingClientRect();
+    const second = cells[1].getBoundingClientRect();
+    const nextRow = cells[16].getBoundingClientRect();
+    return {
+      width: first.width,
+      height: first.height,
+      horizontalGap: second.left - first.right,
+      verticalGap: nextRow.top - first.bottom
+    };
+  });
+  expect(geometry.width).toBeGreaterThanOrEqual(44);
+  expect(geometry.height).toBeGreaterThanOrEqual(44);
+  expect(geometry.horizontalGap).toBeGreaterThanOrEqual(8);
+  expect(geometry.verticalGap).toBeGreaterThanOrEqual(8);
+
+  const assertTouchTargets = async (selector: string) => {
+    const targets = page.locator(selector);
+    for (let index = 0; index < await targets.count(); index += 1) {
+      const box = await targets.nth(index).boundingBox();
+      expect(box, `${selector} target ${index + 1} must be rendered`).not.toBeNull();
+      expect(box!.width, `${selector} target ${index + 1} must be at least 44px wide`).toBeGreaterThanOrEqual(44);
+      expect(box!.height, `${selector} target ${index + 1} must be at least 44px high`).toBeGreaterThanOrEqual(44);
+    }
+  };
+
+  await assertTouchTargets('.site-header .brand, footer a');
+  await page.goto('/privacy/');
+  await assertTouchTargets('header .brand, main a, footer a');
+});
+
 test('@claim:demo-sandbox keeps the sample out of real-song storage, resets it, and discards it on exit', async ({ page }) => {
   await page.goto('/');
   const first = page.locator('.note-cell').first();

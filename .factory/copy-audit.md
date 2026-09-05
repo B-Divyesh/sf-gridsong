@@ -1,6 +1,6 @@
-# Copy audit — polish round 3
+# Copy audit — repair 10
 
-Reviewed 2 September 2026. The first screen names the job, K–8 audience, sample action, next result, and three concrete facts. Counts treat hyphenated terms as one word.
+Reviewed 5 September 2026. The first screen names the job, K–8 audience, sample action, next result, and three concrete facts. Counts treat hyphenated terms as one word.
 
 ## Landing and composer
 
@@ -108,6 +108,12 @@ Reviewed 2 September 2026. The first screen names the job, K–8 audience, sampl
 | Student identity | classroom nickname |
 | Saved composition | song |
 | Isolated sample mode | demo |
+
+## Installed app metadata
+
+| Words | Sentence |
+| ---: | --- |
+| 10 | Make and export classroom songs on a simple colour grid. |
 
 ## Checks
 

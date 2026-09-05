@@ -113,6 +113,60 @@ test('deployed unknown URL returns the accessible 404 and recovers home', async 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make and play songs on a classroom grid');
 });
 
+test('deployed mobile note controls and route links meet the touch-target baseline', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile');
+  await page.goto(`${liveOrigin}/demo?touch-check=${Date.now()}#composer`);
+  const geometry = await page.locator('.note-cell').evaluateAll(cells => {
+    const first = cells[0].getBoundingClientRect();
+    const second = cells[1].getBoundingClientRect();
+    const nextRow = cells[16].getBoundingClientRect();
+    return {
+      width: first.width,
+      height: first.height,
+      horizontalGap: second.left - first.right,
+      verticalGap: nextRow.top - first.bottom
+    };
+  });
+  expect(geometry.width).toBeGreaterThanOrEqual(44);
+  expect(geometry.height).toBeGreaterThanOrEqual(44);
+  expect(geometry.horizontalGap).toBeGreaterThanOrEqual(8);
+  expect(geometry.verticalGap).toBeGreaterThanOrEqual(8);
+
+  const assertTouchTargets = async (selector: string) => {
+    const targets = page.locator(selector);
+    for (let index = 0; index < await targets.count(); index += 1) {
+      const box = await targets.nth(index).boundingBox();
+      expect(box, `${selector} target ${index + 1} must be rendered`).not.toBeNull();
+      expect(box!.width).toBeGreaterThanOrEqual(44);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
+  };
+  await assertTouchTargets('.site-header .brand, footer a');
+  await page.goto(`${liveOrigin}/privacy/`);
+  await assertTouchTargets('header .brand, main a, footer a');
+});
+
+test('deployed stable files revalidate and install copy names the job', async ({ page, request }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+  const response = await page.goto(`${liveOrigin}/?cache-check=${Date.now()}`);
+  const html = await response!.text();
+  const hashedAssets = [...html.matchAll(/(?:src|href)="(\/assets\/index-[^"]+\.(?:js|css))"/g)].map(match => match[1]);
+  expect(hashedAssets).toHaveLength(2);
+  for (const path of hashedAssets) {
+    const asset = await request.get(`${liveOrigin}${path}`);
+    expect(asset.headers()['cache-control']).toContain('immutable');
+  }
+  for (const path of ['/route-entry.js', '/legal.css', '/assets/night-market-grid.webp', '/assets/gridsong-social.jpg']) {
+    const asset = await request.get(`${liveOrigin}${path}`);
+    expect(asset.headers()['cache-control']).toContain('must-revalidate');
+    expect(asset.headers()['cache-control']).not.toContain('immutable');
+  }
+  const manifestResponse = await request.get(`${liveOrigin}/manifest.webmanifest`);
+  const manifest = await manifestResponse.json() as { description?: string };
+  expect(manifest.description).toMatch(/^Make\b/);
+  expect(manifest.description?.toLowerCase()).not.toContain('local-first');
+});
+
 test('deployed demo keeps its accessibility, privacy, keyboard, reduced-motion, and offline contracts', async ({ browser }, testInfo) => {
   test.skip(!liveOrigin, 'Set GRIDSONG_LIVE_URL to run against a deployed Static Web App.');
   const viewport = testInfo.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 900 };

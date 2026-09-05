@@ -6,7 +6,11 @@ const previewAssetCaching: Plugin = {
   configurePreviewServer(server) {
     server.middlewares.use((request, response, next) => {
       const url = new URL(request.url ?? '/', 'http://localhost');
-      if (url.pathname.startsWith('/assets/')) response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      if (/^\/assets\/index-[^/]+\.(?:js|css)(?:\.map)?$/.test(url.pathname)) {
+        response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (url.pathname.startsWith('/assets/') || url.pathname === '/route-entry.js' || url.pathname === '/legal.css') {
+        response.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+      }
 
       if (url.pathname === '/demo' || url.pathname === '/demo/') {
         request.url = `/index.html${url.search}`;
