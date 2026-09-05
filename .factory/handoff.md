@@ -76,3 +76,33 @@ The free composer, exports, and 90-day class gallery are unchanged. The product 
 ## Known gaps
 
 None for this repair order.
+
+---
+
+# Verification 14 update — PASS
+
+**Implementation reviewed:** `7ff9d614bfbcbe8d74bb1fd0e2f76682569a3c03`
+
+**Documentation revision:** `ef0415e0ff24fc17f96fbf488fd95ec223c3f18b`
+
+**Verified:** 5 September 2026
+
+No product code changed in this verification work order. Independent QA found zero findings and zero untested claims. Fresh desktop and phone first screens state the classroom-grid job, K–8 audience, and sample action before scrolling. The sample has the persistent banner, resets cleanly, does not change real data, and removes demo data on exit.
+
+From a clean clone, all 26 declared claim commands passed. `npm test` passed 16 tests; `npm run test:api` passed 14; `npm run build` produced `dist/`; `npm run test:e2e` passed 55 tests with 17 intentional skips. The deployed suite passed 12 tests with 2 intentional skips, and live gallery smoke/flow/capacity checks passed.
+
+Mobile Lighthouse measured 100 performance, accessibility, best practices, and SEO (LCP 1.4 s). URL verification and Axe checks found no errors or WCAG A/AA/2.1 AA violations. The live output matches the `7ff9d61` build byte-for-byte. Previous gallery, claim/demo, 404, copy, focus, touch-target, cache, and manifest-language findings all remain fixed.
+
+See [verification-14.md](verification-14.md) for the full evidence and claim-by-claim result. No known gaps.
+
+To reproduce:
+
+```sh
+npm ci
+npm test
+npm run test:api
+npm run build
+npm run test:e2e
+GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1
+npm run test:live
+```
