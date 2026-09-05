@@ -1,48 +1,78 @@
-# Gridsong independent verification 13 handoff — FAIL
+# Gridsong repair 10 handoff — PASS
 
-**Candidate:** `56f2390809d880f71a4306eed173d1f6b28b02bd`
+**Implementation commit:** `7ff9d614bfbcbe8d74bb1fd0e2f76682569a3c03`
+
+**Documentation/evidence:** the later repository commit containing this handoff and `.factory/evidence/repair-10/`
 
 **Live URL:** <https://gridsong.sociobot.in>
-**Date:** 2026-09-02
 
-## Decision
+**Verified:** 5 September 2026
 
-**FAIL.** All 26 declared claim commands pass, the end-to-end product works, and the live front end is a byte-for-byte match for this candidate. Release is blocked by the primary mobile grid’s 40×44 px note controls and 4 px gaps, below the required 44×44 px targets and 8 px spacing. Secondary wordmark/footer links also miss 44 px.
+## Outcome
 
-## Verification completed
+All findings in independent verification 13 are fixed in production. The mobile note grid now uses 44×44 px controls with 8 px horizontal and vertical gaps. The reported app and legal-page links now have 44 px hit areas. Only Vite’s content-hashed bundles use one-year immutable caching; stable scripts, styles, and images revalidate. The installed-app description now says what the product does without “local-first.”
 
-- Clean `npm ci`: pass, 0 vulnerabilities.
-- Every `.factory/claims.json` command, run separately: 26/26 pass.
-- `npm test`: 16/16 pass.
-- `npm run test:api`: 14/14 pass.
-- `npm run build`: pass; strict TypeScript plus `dist/`.
-- `npm run test:e2e`: 50 passed, 12 live-only/project skips.
-- Live Playwright desktop/390 px suite: 10/10 pass.
-- `npm run test:live`: pass, including three concurrent 120-song capacity trials.
-- Independent single-client capacity run: 120 accepted and persisted; request 121 returned 429 with `Retry-After: 60`; test submissions were deleted.
-- Fleet URL check: pass. Live Lighthouse: 97 performance / 100 accessibility / 100 best practices / 100 SEO; LCP 1.5 s, CLS 0.
-- Live request and response audit: same-origin only, no cookies, no console/page errors, expected security headers, API `no-store`.
-- PWA: active worker, clean update check, offline reload and offline edit/export pass.
-- Local/live parity: exact for main HTML, hashed JS/CSS, route script, service worker, legal pages, and 404.
+The deployed front end is a byte-for-byte match for the implementation commit. No open repair finding remains.
 
-## Defects
+## Current finding disposition
 
-1. **High / release-blocking:** `src/style.css:117-118` renders the primary note tiles at 40×44 px with 4 px gaps on a 390 px phone. The supplied accessibility/design contract requires at least 44×44 px targets and 8 px separation. The header brand and several footer/legal links are also under 44 px.
-2. **Medium:** `public/staticwebapp.config.json:14-17` gives unversioned route, legal-style, and image files one-year immutable caching. Fingerprint them or make them revalidate.
-3. **Low:** `public/manifest.webmanifest:4` uses the banned and ambiguous phrase “local-first.”
+| Finding | Disposition | Evidence |
+| --- | --- | --- |
+| F-13-1: mobile touch targets and spacing | Fixed | A fresh 390×844 production browser measured notes at 44×44 px with 8 px horizontal and vertical gaps. The app wordmark, app footer links, legal wordmark, legal contact link, and legal footer links all measure at least 44×44 px. `390px note controls and reported route links meet the touch-target baseline` and its deployed counterpart assert rendered geometry. |
+| F-13-2: immutable unversioned assets | Fixed | Live `/route-entry.js`, `/legal.css`, `/assets/night-market-grid.webp`, and `/assets/gridsong-social.jpg` return `public, max-age=0, must-revalidate`. Hashed JS/CSS still return `max-age=31536000, immutable`; `/sw.js` remains `no-cache`. The service-worker cache advanced to `gridsong-shell-v8`; a fresh update check found only v8, active and controlling, with no waiting worker. |
+| F-13-3: banned installed-app wording | Fixed | The manifest says “Make and export classroom songs on a simple colour grid.” The description starts with a verb, contains ten words, and is included in `.factory/copy-audit.md`. |
 
-Full evidence and exact remediation are in `.factory/verification-13.md`; machine artifacts are in `.factory/evidence/verification-13/`.
+## Earlier history disposition
 
-## Re-run
+All earlier verification and review reports were read before repair. Their fixes remain covered:
 
-```sh
-npm ci
-npm test
-npm run test:api
-npm run build
-npm run test:e2e
-GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1
-npm run test:live
-mkdir -p .factory/evidence/verification-13/verify-url
-/opt/fleet/lib/verify-url.sh https://gridsong.sociobot.in .factory/evidence/verification-13/verify-url
-```
+- Complete maximum-size song links, plain invalid-link recovery, all settings boundaries, six sounds, keyboard editing, WAV/MIDI export, and user-gesture audio pass the unit and browser suites.
+- Real teacher board creation, separate-device student submission, teacher-only read/delete, protected storage shape, 90-day expiry/cleanup, and the atomic 120-song limit pass API, two-browser, and live checks. Each of three live capacity trials accepted and persisted 120 entries, then refused the extra submission; test entries were removed by the script.
+- The isolated sample uses separate demo keys, resets to 48 notes, discards both demo keys on either Start for real path, leaves the seeded real song unchanged, and makes no demo gallery API request.
+- The complete claims inventory, clean API dependency installation, offline edit/save/WAV/MIDI path, normal-route demo visibility, shared route header/footer, route focus announcements, plain terminology, legal pages, metadata, and designed HTTP 404 all pass their existing regressions.
+
+## Verification
+
+From clean clone `/tmp/gridsong-repair10-clean-7HkpDm` at the implementation commit:
+
+- `npm ci`: passed; zero reported vulnerabilities.
+- Every command in `.factory/claims.json`, run separately and exactly as declared: 26/26 passed.
+
+From the working repository:
+
+- `npm test`: 16/16 passed.
+- `npm run test:api`: 14/14 passed.
+- `npm run build`: passed; `dist/index.html` present.
+- `npm run test:e2e`: 55 passed; 17 intentional live-only/project skips.
+- `GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1`: 12 passed; 2 project skips.
+- `npm run test:live`: malformed request, create → submit → read → delete, and three atomic 120-song capacity trials passed.
+- `/opt/fleet/lib/verify-url.sh https://gridsong.sociobot.in .factory/evidence/repair-10/verify-url`: HTTP 200, title, language, one h1, main, image alternatives, labelled buttons, and no console errors.
+- Playwright Axe integration: zero WCAG A/AA/2.1 AA violations across app, demo, legal, and 404 routes.
+- Live Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices, 100 SEO; FCP 0.9 s, LCP 1.4 s, TBT 10 ms, CLS 0.
+- Build budget: 38.82 KB JavaScript (12.93 KB gzip), 18.02 KB CSS (4.89 KB gzip), no web fonts, 81.17 KB hero WebP.
+
+## Cold browser check
+
+Fresh 390×844 phone and 1440×900 desktop contexts both showed, before scrolling:
+
+- Job: “Make and play songs on a classroom grid.”
+- Audience: K–8 music teachers and students.
+- First action: “Try it with sample data,” with the stated four-bar result.
+
+One click opened “Morning call and response” with 48 notes, 4 bars, 104 BPM, the persistent demo banner, Reset demo, and Start for real. Reset restored the 48-note sample. Demo edits did not change the real song, and Start for real removed demo storage. There was no page-level overflow, console error, or page error at either size. At 200% text size on the phone, the composer, Play action, 256 notes, and contained grid scroller remained usable without page-level overflow.
+
+Screenshots and machine reports are in `.factory/evidence/repair-10/`.
+
+## Deployment and parity
+
+`swa deploy production --env production` used the checked-in `production` configuration for `sf-gridsong`, including the existing `dist/` and `api/` locations. The custom domain served the new bundle after deployment.
+
+Local `dist/` and live responses matched exactly for `index.html`, hashed JS/CSS, `route-entry.js`, `legal.css`, `sw.js`, the manifest, Privacy, Terms, and 404. The live initial JavaScript and CSS names are `index-CQ0IRFvj.js` and `index-BzVEfiUS.css`.
+
+## Product and billing scope
+
+The free composer, exports, and 90-day class gallery are unchanged. The product does not advertise a paid offer, and no paid deliverable was removed or made free in this repair. No price or billing metadata was invented.
+
+## Known gaps
+
+None for this repair order.
