@@ -1,4 +1,31 @@
-# Gridsong repair 10 handoff — PASS
+# Gridsong review 4 handoff — PASS
+
+**Review verdict:** **PASS — zero findings and zero untested claims.**
+
+**Implementation reviewed:** `7ff9d614bfbcbe8d74bb1fd0e2f76682569a3c03`
+**Documentation/report revision:** `a491baa1342478d33d438f0c34dedb3d58cf3c99`
+**Reviewed:** 6 September 2026
+**Live URL:** <https://gridsong.sociobot.in>
+
+No product code changed in review 4. A detached clean clone ran all 26 exact `.factory/claims.json` commands successfully. `npm test` passed 16 tests, `npm run test:api` passed 14, `npm run build` produced `dist/`, and `npm run test:e2e` passed 55 tests with 17 intentional skips. The live deployed suite passed 12 checks with 2 intentional project skips; `npm run test:live` passed the health, two-browser gallery, and three 120-song-capacity trials.
+
+Fresh phone and desktop contexts stated the classroom-grid job, K–8 audience, and sample action before scrolling. The populated sample banner persisted, reset correctly, did not change real data, and cleared demo storage on exit. Axe and URL verification found no accessibility or console defects; the styled 404 returned HTTP 404; offline/reduced-motion/keyboard/mobile paths passed. The live static output matched the fresh `7ff9d61` production build byte-for-byte. Mobile Lighthouse was 100/100/100/100 with LCP 1.5 s.
+
+See [review-4.md](review-4.md) for evidence and prior-finding disposition. Review evidence is also at `/work/.evidence/review-4/`; the factory result is `/work/.evidence/qa-result.json`.
+
+To reproduce:
+
+```sh
+npm ci
+npm test
+npm run test:api
+npm run build
+npm run test:e2e
+GRIDSONG_LIVE_URL=https://gridsong.sociobot.in npx playwright test tests/live.spec.ts --workers=1
+npm run test:live
+```
+
+## Earlier repair 10 handoff
 
 **Implementation commit:** `7ff9d614bfbcbe8d74bb1fd0e2f76682569a3c03`
 
